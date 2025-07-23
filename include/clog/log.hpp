@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 
 // Platform detection
 #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
@@ -27,6 +28,26 @@ enum class Level {
     TRACE = 5
 };
 
+enum class Color {
+    DEFAULT = 0,
+    BLACK,
+    RED,
+    GREEN,
+    YELLOW,
+    BLUE,
+    MAGENTA,
+    CYAN,
+    WHITE,
+    BRIGHT_BLACK,
+    BRIGHT_RED,
+    BRIGHT_GREEN,
+    BRIGHT_YELLOW,
+    BRIGHT_BLUE,
+    BRIGHT_MAGENTA,
+    BRIGHT_CYAN,
+    BRIGHT_WHITE
+};
+
 class Logger {
 public:
     // Core API
@@ -42,6 +63,11 @@ public:
     // Platform-specific initialization (optional)
     static void init();
     
+    // Tag color configuration
+    static void setTagColor(const char* tag, Color color);
+    static void clearTagColor(const char* tag);
+    static void clearAllTagColors();
+    
     // Convenience methods
     static void error(const char* tag, const char* format, ...);
     static void warn(const char* tag, const char* format, ...);
@@ -53,9 +79,21 @@ private:
     static Level currentLevel;
     static Callback logCallback;
     static bool directOutput;
+    
+    // Tag color storage
+    static constexpr size_t MAX_TAG_COLORS = 32;
+    struct TagColor {
+        char tag[32];
+        Color color;
+        bool active;
+    };
+    static TagColor tagColors[MAX_TAG_COLORS];
+    
     static void output(Level level, const char* tag, const char* message);
     static const char* levelToString(Level level);
     static const char* levelToColor(Level level);
+    static const char* colorToAnsi(Color color);
+    static Color getTagColor(const char* tag);
 };
 
 } // namespace clog
@@ -100,6 +138,7 @@ namespace clog {
 Level Logger::currentLevel = Level::INFO;
 Logger::Callback Logger::logCallback = nullptr;
 bool Logger::directOutput = true;
+Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
 void Logger::log(Level level, const char* tag, const char* format, ...) {
     if (level > currentLevel) return;
@@ -122,9 +161,17 @@ void Logger::output(Level level, const char* tag, const char* message) {
 #ifdef CLOG_PLATFORM_ARDUINO
         Serial.printf("[%s] %s: %s\n", levelStr, tag, message);
 #elif defined(CLOG_PLATFORM_DESKTOP)
-        const char* color = levelToColor(level);
-        std::cout << color << "[" << levelStr << "] " << tag << ": " 
-                  << message << "\033[0m" << std::endl;
+        const char* levelColor = levelToColor(level);
+        Color tagColor = getTagColor(tag);
+        const char* tagColorCode = colorToAnsi(tagColor);
+        
+        std::cout << "[" << levelColor << levelStr << "\033[0m" << "] ";
+        if (tagColor != Color::DEFAULT) {
+            std::cout << tagColorCode << tag << "\033[0m";
+        } else {
+            std::cout << tag;
+        }
+        std::cout << ": " << message << std::endl;
 #else
         printf("[%s] %s: %s\n", levelStr, tag, message);
 #endif
@@ -217,6 +264,75 @@ void Logger::init() {
 #ifdef CLOG_PLATFORM_ARDUINO
     // Serial already initialized by Arduino framework
 #endif
+}
+
+// Tag color management
+void Logger::setTagColor(const char* tag, Color color) {
+    // First check if tag already exists
+    for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
+        if (tagColors[i].active && strcmp(tagColors[i].tag, tag) == 0) {
+            tagColors[i].color = color;
+            return;
+        }
+    }
+    
+    // Find empty slot
+    for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
+        if (!tagColors[i].active) {
+            strncpy(tagColors[i].tag, tag, sizeof(tagColors[i].tag) - 1);
+            tagColors[i].tag[sizeof(tagColors[i].tag) - 1] = '\0';
+            tagColors[i].color = color;
+            tagColors[i].active = true;
+            return;
+        }
+    }
+}
+
+void Logger::clearTagColor(const char* tag) {
+    for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
+        if (tagColors[i].active && strcmp(tagColors[i].tag, tag) == 0) {
+            tagColors[i].active = false;
+            return;
+        }
+    }
+}
+
+void Logger::clearAllTagColors() {
+    for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
+        tagColors[i].active = false;
+    }
+}
+
+Color Logger::getTagColor(const char* tag) {
+    for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
+        if (tagColors[i].active && strcmp(tagColors[i].tag, tag) == 0) {
+            return tagColors[i].color;
+        }
+    }
+    return Color::DEFAULT;
+}
+
+const char* Logger::colorToAnsi(Color color) {
+    switch (color) {
+        case Color::DEFAULT:      return "";
+        case Color::BLACK:        return "\033[30m";
+        case Color::RED:          return "\033[31m";
+        case Color::GREEN:        return "\033[32m";
+        case Color::YELLOW:       return "\033[33m";
+        case Color::BLUE:         return "\033[34m";
+        case Color::MAGENTA:      return "\033[35m";
+        case Color::CYAN:         return "\033[36m";
+        case Color::WHITE:        return "\033[37m";
+        case Color::BRIGHT_BLACK: return "\033[90m";
+        case Color::BRIGHT_RED:   return "\033[91m";
+        case Color::BRIGHT_GREEN: return "\033[92m";
+        case Color::BRIGHT_YELLOW:return "\033[93m";
+        case Color::BRIGHT_BLUE:  return "\033[94m";
+        case Color::BRIGHT_MAGENTA:return "\033[95m";
+        case Color::BRIGHT_CYAN:  return "\033[96m";
+        case Color::BRIGHT_WHITE: return "\033[97m";
+        default: return "";
+    }
 }
 
 } // namespace clog

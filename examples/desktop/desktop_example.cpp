@@ -20,7 +20,91 @@ int main() {
     // Set log level to show all messages
     clog::Logger::setLevel(clog::Level::TRACE);
     
+    // Color and level format test - show all levels
+    std::cout << "\n=== Color and Level Format Test ===" << std::endl;
+    CLOG_ERROR("FormatTest", "This is an ERROR message - should be red");
+    CLOG_WARN("FormatTest", "This is a WARN message - should be yellow");
+    CLOG_INFO("FormatTest", "This is an INFO message - should be green");
+    CLOG_DEBUG("FormatTest", "This is a DEBUG message - should be blue");
+    CLOG_TRACE("FormatTest", "This is a TRACE message - should be gray");
+    
+    // Tag color configuration showcase
+    std::cout << "\n=== Tag Color Configuration Showcase ===" << std::endl;
+    std::cout << "Setting up custom colors for different system components..." << std::endl;
+    
+    // Configure colors for different system components
+    clog::Logger::setTagColor("Database", clog::Color::BRIGHT_CYAN);
+    clog::Logger::setTagColor("Network", clog::Color::BRIGHT_MAGENTA);  
+    clog::Logger::setTagColor("Security", clog::Color::BRIGHT_RED);
+    clog::Logger::setTagColor("Performance", clog::Color::BRIGHT_YELLOW);
+    clog::Logger::setTagColor("UI", clog::Color::BRIGHT_GREEN);
+    clog::Logger::setTagColor("FileSystem", clog::Color::BLUE);
+    clog::Logger::setTagColor("Memory", clog::Color::CYAN);
+    clog::Logger::setTagColor("Audio", clog::Color::MAGENTA);
+    
+    std::cout << "\nNow observe how each tag appears in its configured color:" << std::endl;
+    
+    // Demonstrate all configured tags with different log levels
+    CLOG_INFO("Database", "Connection pool initialized with 10 connections");
+    CLOG_WARN("Network", "High latency detected: 250ms response time");
+    CLOG_ERROR("Security", "Failed login attempt from IP 192.168.1.100");
+    CLOG_DEBUG("Performance", "Cache hit ratio: 94.5% (very good)");
+    CLOG_INFO("UI", "Main window rendered successfully");
+    CLOG_DEBUG("FileSystem", "Loaded 1,247 files from /app/data directory");
+    CLOG_WARN("Memory", "Heap usage at 78% - consider cleanup");
+    CLOG_ERROR("Audio", "Audio device not found - falling back to default");
+    
+    // Show default behavior
+    CLOG_INFO("DefaultTag", "This tag has no custom color (appears in default)");
+    
+    std::cout << "\n--- Demonstrating Color Variety ---" << std::endl;
+    std::cout << "Here's a showcase of all available colors:" << std::endl;
+    
+    // Showcase all available colors
+    clog::Logger::setTagColor("RED", clog::Color::RED);
+    clog::Logger::setTagColor("GREEN", clog::Color::GREEN);
+    clog::Logger::setTagColor("YELLOW", clog::Color::YELLOW);
+    clog::Logger::setTagColor("BLUE", clog::Color::BLUE);
+    clog::Logger::setTagColor("MAGENTA", clog::Color::MAGENTA);
+    clog::Logger::setTagColor("CYAN", clog::Color::CYAN);
+    clog::Logger::setTagColor("WHITE", clog::Color::WHITE);
+    clog::Logger::setTagColor("B_RED", clog::Color::BRIGHT_RED);
+    clog::Logger::setTagColor("B_GREEN", clog::Color::BRIGHT_GREEN);
+    clog::Logger::setTagColor("B_YELLOW", clog::Color::BRIGHT_YELLOW);
+    clog::Logger::setTagColor("B_BLUE", clog::Color::BRIGHT_BLUE);
+    clog::Logger::setTagColor("B_MAGENTA", clog::Color::BRIGHT_MAGENTA);
+    clog::Logger::setTagColor("B_CYAN", clog::Color::BRIGHT_CYAN);
+    clog::Logger::setTagColor("B_WHITE", clog::Color::BRIGHT_WHITE);
+    
+    CLOG_INFO("RED", "Regular red color");
+    CLOG_INFO("GREEN", "Regular green color");
+    CLOG_INFO("YELLOW", "Regular yellow color");
+    CLOG_INFO("BLUE", "Regular blue color");
+    CLOG_INFO("MAGENTA", "Regular magenta color");
+    CLOG_INFO("CYAN", "Regular cyan color");
+    CLOG_INFO("WHITE", "Regular white color");
+    CLOG_INFO("B_RED", "Bright red color");
+    CLOG_INFO("B_GREEN", "Bright green color");
+    CLOG_INFO("B_YELLOW", "Bright yellow color");
+    CLOG_INFO("B_BLUE", "Bright blue color");
+    CLOG_INFO("B_MAGENTA", "Bright magenta color");
+    CLOG_INFO("B_CYAN", "Bright cyan color");
+    CLOG_INFO("B_WHITE", "Bright white color");
+    
+    std::cout << "\n--- Dynamic Color Management ---" << std::endl;
+    CLOG_INFO("TempTag", "This tag will change color...");
+    
+    clog::Logger::setTagColor("TempTag", clog::Color::BRIGHT_RED);
+    CLOG_INFO("TempTag", "Now I'm bright red!");
+    
+    clog::Logger::setTagColor("TempTag", clog::Color::BRIGHT_GREEN);
+    CLOG_INFO("TempTag", "Now I'm bright green!");
+    
+    clog::Logger::clearTagColor("TempTag");
+    CLOG_INFO("TempTag", "Back to default color after clearing");
+    
     // Demonstrate basic logging
+    std::cout << "\n=== Basic Logging Examples ===" << std::endl;
     CLOG_ERROR("Main", "This is an error message");
     CLOG_WARN("Main", "This is a warning message");
     CLOG_INFO("Main", "This is an info message");

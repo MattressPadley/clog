@@ -9,6 +9,7 @@ CLog is a lightweight, header-only C++ logging library designed for cross-platfo
 - **Lightweight**: Minimal overhead suitable for embedded systems
 - **Flexible**: Supports both direct output and callback-based integration
 - **Configurable**: Compile-time log level filtering and buffer size configuration
+- **Colorized output**: Level-based colors and configurable tag colors for better visual distinction
 - **Zero dependencies**: Only uses standard C++ library features
 
 ## Quick Start
@@ -164,14 +165,97 @@ clog::Logger::enableDirectOutput(true);
 clog::Logger::init();
 ```
 
+### Tag Color Configuration
+
+CLog supports configurable colors for tags on desktop platforms, making it easier to visually distinguish between different system components in log output.
+
+#### Available Colors
+
+```cpp
+enum class Color {
+    DEFAULT,        // No color (system default)
+    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
+    BRIGHT_BLACK, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW,
+    BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, BRIGHT_WHITE
+};
+```
+
+#### Tag Color Methods
+
+```cpp
+// Set a custom color for a specific tag
+clog::Logger::setTagColor("Database", clog::Color::BRIGHT_CYAN);
+clog::Logger::setTagColor("Network", clog::Color::BRIGHT_MAGENTA);
+clog::Logger::setTagColor("Security", clog::Color::BRIGHT_RED);
+
+// Remove custom color from a tag (returns to default)
+clog::Logger::clearTagColor("Database");
+
+// Clear all tag colors
+clog::Logger::clearAllTagColors();
+```
+
+#### Tag Color Usage Example
+
+```cpp
+#include <clog/log.hpp>
+
+int main() {
+    // Configure colors for different system components
+    clog::Logger::setTagColor("Database", clog::Color::BRIGHT_CYAN);
+    clog::Logger::setTagColor("Network", clog::Color::BRIGHT_MAGENTA);
+    clog::Logger::setTagColor("Security", clog::Color::BRIGHT_RED);
+    clog::Logger::setTagColor("UI", clog::Color::BRIGHT_GREEN);
+    
+    // Now these tags will appear in their configured colors
+    CLOG_INFO("Database", "Connection established");
+    CLOG_WARN("Network", "High latency detected");
+    CLOG_ERROR("Security", "Authentication failed");
+    CLOG_DEBUG("UI", "Window rendered successfully");
+    CLOG_INFO("DefaultTag", "This appears in default color");
+    
+    return 0;
+}
+```
+
+#### Output Format
+
+The colored output format is: `[<colored_level>] <colored_tag>: message`
+
+- **Level text** is colored based on log level (ERROR=red, WARN=yellow, INFO=green, etc.)
+- **Tag text** is colored based on your configuration (or default if not configured)
+- **Everything else** (brackets, colon, message) remains in default color
+
+#### Platform Support
+
+- **Desktop platforms**: Full color support with ANSI escape codes
+- **Embedded platforms**: Tag colors are ignored to save memory; only level colors are used
+- **Arduino/ESP32**: Colors are not displayed but tag color calls are safely ignored
+
+#### Limitations
+
+- Maximum of 32 different tag colors can be configured simultaneously
+- Tag names are limited to 31 characters
+- Colors only affect direct console output (not callback-based logging)
+
 ## Examples
 
 The library includes comprehensive examples:
 
-- **Desktop Example**: Basic usage with colored console output
+- **Desktop Example**: Basic usage with colored console output and tag color configuration showcase
 - **Arduino Example**: Embedded system logging with sensor simulation
 - **ESP32 Advanced**: Multi-task logging with WiFi and web server integration
 - **Callback Integration**: Advanced integration with parent application logging systems
+
+### Running Examples
+
+```bash
+# Run desktop example with tag color showcase
+just run-desktop-example
+
+# Build and run other examples
+just build-examples
+```
 
 See the `examples/` directory for complete, runnable examples.
 
