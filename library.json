@@ -1,0 +1,79 @@
+{
+  "name": "CLog",
+  "version": "0.0.1",
+  "description": "Unified, lightweight C++ logging library for embedded and desktop platforms",
+  "keywords": [
+    "logging",
+    "embedded",
+    "arduino",
+    "esp32",
+    "rp2040",
+    "cross-platform",
+    "header-only"
+  ],
+  "authors": [
+    {
+      "name": "MattressPadley",
+      "email": "hello@matthadley.me",
+      "maintainer": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MattressPadley/clog.git"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/MattressPadley/clog",
+  "frameworks": [
+    "arduino",
+    "espidf",
+    "pico-sdk"
+  ],
+  "platforms": [
+    "espressif32",
+    "espressif8266",
+    "raspberrypi",
+    "atmelavr",
+    "ststm32",
+    "teensy",
+    "native"
+  ],
+  "headers": "log.hpp",
+  "export": {
+    "include": "include"
+  },
+  "build": {
+    "includeDir": "include",
+    "flags": [
+      "-std=c++17"
+    ]
+  },
+  "examples": [
+    {
+      "name": "Arduino Basic",
+      "base": "examples/arduino",
+      "files": [
+        "arduino_basic.cpp"
+      ]
+    },
+    {
+      "name": "ESP32 Advanced",
+      "base": "examples/esp32",
+      "files": [
+        "esp32_advanced.cpp"
+      ]
+    },
+    {
+      "name": "Callback Integration",
+      "base": "examples/callback",
+      "files": [
+        "callback_example.cpp"
+      ]
+    }
+  ],
+  "dependencies": {},
+  "scripts": {
+    "test": "pio test",
+    "build": "pio run"
+  }
+}
