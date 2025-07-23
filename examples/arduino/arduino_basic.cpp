@@ -13,8 +13,8 @@ void setup() {
     }
     
     // Initialize CLog
-    clog::Logger::init();
-    clog::Logger::setLevel(clog::Level::DEBUG);  // Show debug messages
+    clogger::Logger::init();
+    clogger::Logger::setLevel(clogger::Level::DEBUG);  // Show debug messages
     
     CLOG_INFO("System", "Arduino CLog example starting...");
     CLOG_DEBUG("System", "Debug logging enabled");

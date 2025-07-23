@@ -68,7 +68,7 @@
 #endif
 
 // Platform-specific includes and utilities
-namespace clog {
+namespace clogger {
 namespace platform {
 
 // Initialize platform-specific features
@@ -137,4 +137,4 @@ inline constexpr bool isEmbedded() {
 }
 
 } // namespace platform
-} // namespace clog
+} // namespace clogger

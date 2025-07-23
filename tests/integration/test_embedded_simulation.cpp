@@ -52,7 +52,7 @@ private:
     size_t total_logs = 0;
     
 public:
-    void addLog(clog::Level level, const char* tag, const char* message) {
+    void addLog(clogger::Level level, const char* tag, const char* message) {
         // Simulate embedded circular buffer behavior
         LogEntry& entry = log_buffer[current_index];
         entry.level = static_cast<int>(level);
@@ -84,11 +84,11 @@ void test_memory_constrained_logging() {
     
     MemoryConstrainedLogger embedded_logger;
     
-    clog::Logger::setCallback([&embedded_logger](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&embedded_logger](clogger::Level level, const char* tag, const char* message) {
         embedded_logger.addLog(level, tag, message);
     });
     
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     // Simulate typical embedded logging scenario
     CLOG_INFO("System", "Boot");
@@ -104,7 +104,7 @@ void test_memory_constrained_logging() {
     CLOG_WARN("Sensor", "High temp");
     CLOG_ERROR("System", "Fault");
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     EmbeddedSimTest::assert_true(embedded_logger.getTotalLogs() == 14, "All messages logged");
     EmbeddedSimTest::assert_true(embedded_logger.getBufferSize() == 10, "Circular buffer size correct");
@@ -120,12 +120,12 @@ void test_low_level_performance() {
     // Measure performance with minimal overhead
     volatile int dummy_counter = 0;
     
-    clog::Logger::setCallback([&dummy_counter](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&dummy_counter](clogger::Level level, const char* tag, const char* message) {
         // Simulate very fast embedded logging (just increment counter)
         dummy_counter++;
     });
     
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     auto start = std::chrono::high_resolution_clock::now();
     
@@ -137,7 +137,7 @@ void test_low_level_performance() {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     EmbeddedSimTest::assert_true(dummy_counter == 100, "All fast messages processed");
     EmbeddedSimTest::assert_true(duration.count() < 50000, "Fast logging completed in < 50ms");  // 50ms for 100 messages
@@ -151,12 +151,12 @@ void test_compile_time_filtering() {
     
     int message_count = 0;
     
-    clog::Logger::setCallback([&message_count](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&message_count](clogger::Level level, const char* tag, const char* message) {
         message_count++;
     });
     
     // Test different log levels to simulate compile-time filtering
-    clog::Logger::setLevel(clog::Level::ERROR);
+    clogger::Logger::setLevel(clogger::Level::ERROR);
     
     // These should be filtered out at runtime (in embedded, they'd be filtered at compile-time)
     CLOG_ERROR("Filter", "Error message");   // Should appear
@@ -167,7 +167,7 @@ void test_compile_time_filtering() {
     EmbeddedSimTest::assert_true(message_count == 1, "ERROR level filtering works");
     
     message_count = 0;
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     CLOG_ERROR("Filter", "Error message");   // Should appear
     CLOG_WARN("Filter", "Warning message");  // Should appear
@@ -176,7 +176,7 @@ void test_compile_time_filtering() {
     
     EmbeddedSimTest::assert_true(message_count == 3, "INFO level filtering works");
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
 }
 
 void test_buffer_overflow_handling() {
@@ -184,11 +184,11 @@ void test_buffer_overflow_handling() {
     
     std::vector<std::string> captured_messages;
     
-    clog::Logger::setCallback([&captured_messages](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&captured_messages](clogger::Level level, const char* tag, const char* message) {
         captured_messages.push_back(message);
     });
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     // Test with very long message (should be truncated)
     std::string very_long_message(2000, 'A');  // 2000 characters
@@ -198,7 +198,7 @@ void test_buffer_overflow_handling() {
     CLOG_INFO("BufferTest", "Many args: %d %d %d %d %d %d %d %d %d %d", 
               1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     EmbeddedSimTest::assert_true(captured_messages.size() == 2, "Messages captured despite overflow");
     EmbeddedSimTest::assert_true(captured_messages[0].length() < 2000, "Long message was truncated");
@@ -216,13 +216,13 @@ void test_real_time_constraints() {
     
     std::vector<std::chrono::microseconds> iteration_times;
     
-    clog::Logger::setCallback([](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([](clogger::Level level, const char* tag, const char* message) {
         // Simulate very fast embedded output (e.g., DMA to UART buffer)
         volatile int dummy = 0;
         for (int i = 0; i < 5; i++) dummy += i;  // Minimal processing
     });
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     for (int i = 0; i < ITERATIONS; i++) {
         auto start = std::chrono::high_resolution_clock::now();
@@ -239,7 +239,7 @@ void test_real_time_constraints() {
         iteration_times.push_back(duration);
     }
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     // Analyze timing results
     int violations = 0;
@@ -268,12 +268,12 @@ void test_interrupt_context_simulation() {
     // Simulate logging from interrupt context (very fast, minimal processing)
     std::vector<std::string> interrupt_logs;
     
-    clog::Logger::setCallback([&interrupt_logs](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&interrupt_logs](clogger::Level level, const char* tag, const char* message) {
         // In real embedded system, this would go to a lock-free ring buffer
         interrupt_logs.push_back(std::string(tag) + ":" + message);
     });
     
-    clog::Logger::setLevel(clog::Level::ERROR);  // Only critical messages in interrupts
+    clogger::Logger::setLevel(clogger::Level::ERROR);  // Only critical messages in interrupts
     
     // Simulate multiple interrupt events
     for (int i = 0; i < 10; i++) {
@@ -283,7 +283,7 @@ void test_interrupt_context_simulation() {
         }
     }
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     EmbeddedSimTest::assert_true(interrupt_logs.size() == 2, "Only critical interrupt messages logged");
     EmbeddedSimTest::assert_true(interrupt_logs[0].find("Critical error 3") != std::string::npos, 

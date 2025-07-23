@@ -39,22 +39,22 @@ int SimpleIntegrationTest::tests_passed = 0;
 std::vector<std::string> test_messages;
 int test_message_count = 0;
 
-void simpleTestCallback(clog::Level level, const char* tag, const char* message) {
+void simpleTestCallback(clogger::Level level, const char* tag, const char* message) {
     test_message_count++;
     const char* level_str = "";
     switch (level) {
-        case clog::Level::ERROR: level_str = "ERROR"; break;
-        case clog::Level::WARN:  level_str = "WARN"; break;
-        case clog::Level::INFO:  level_str = "INFO"; break;
-        case clog::Level::DEBUG: level_str = "DEBUG"; break;
-        case clog::Level::TRACE: level_str = "TRACE"; break;
+        case clogger::Level::ERROR: level_str = "ERROR"; break;
+        case clogger::Level::WARN:  level_str = "WARN"; break;
+        case clogger::Level::INFO:  level_str = "INFO"; break;
+        case clogger::Level::DEBUG: level_str = "DEBUG"; break;
+        case clogger::Level::TRACE: level_str = "TRACE"; break;
         default: level_str = "UNKNOWN"; break;
     }
     
     test_messages.push_back(std::string(level_str) + ":" + tag + ":" + message);
 }
 
-void fileTestCallback(clog::Level level, const char* tag, const char* message) {
+void fileTestCallback(clogger::Level level, const char* tag, const char* message) {
     std::ofstream file("test_integration.log", std::ios::app);
     if (file.is_open()) {
         file << "[" << tag << "] " << message << std::endl;
@@ -69,15 +69,15 @@ void test_basic_integration() {
     test_message_count = 0;
     
     // Set callback and test
-    clog::Logger::setCallback(simpleTestCallback);
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setCallback(simpleTestCallback);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     CLOG_ERROR("BasicTest", "Error message");
     CLOG_WARN("BasicTest", "Warning message");
     CLOG_INFO("BasicTest", "Info message");
     CLOG_DEBUG("BasicTest", "Debug message");  // Should be filtered
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     SimpleIntegrationTest::assert_true(test_message_count == 3, "Three messages captured (debug filtered)");
     SimpleIntegrationTest::assert_true(test_messages.size() == 3, "Message vector has 3 entries");
@@ -95,14 +95,14 @@ void test_file_integration() {
     std::remove(log_file.c_str());
     
     // Set file callback
-    clog::Logger::setCallback(fileTestCallback);
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setCallback(fileTestCallback);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     CLOG_ERROR("FileTest", "File error message");
     CLOG_INFO("FileTest", "File info message");
     CLOG_INFO("FileTest", "Formatted: %d items", 42);
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     // Check file was created and has content
     std::ifstream file(log_file);
@@ -127,16 +127,16 @@ void test_platform_integration() {
     std::cout << "\n--- Testing Platform Integration ---" << std::endl;
     
     // Test platform detection
-    const char* platform = clog::platform::getName();
+    const char* platform = clogger::platform::getName();
     SimpleIntegrationTest::assert_true(platform != nullptr, "Platform name available");
     SimpleIntegrationTest::assert_true(strlen(platform) > 0, "Platform name not empty");
     
     std::cout << "Detected platform: " << platform << std::endl;
     
     // Test platform features
-    bool has_color = clog::platform::hasColorSupport();
-    bool is_embedded = clog::platform::isEmbedded();
-    size_t buffer_size = clog::platform::getDefaultBufferSize();
+    bool has_color = clogger::platform::hasColorSupport();
+    bool is_embedded = clogger::platform::isEmbedded();
+    size_t buffer_size = clogger::platform::getDefaultBufferSize();
     
     SimpleIntegrationTest::assert_true(buffer_size > 0, "Buffer size > 0");
     SimpleIntegrationTest::assert_true(buffer_size >= 64, "Buffer size >= 64");
@@ -146,7 +146,7 @@ void test_platform_integration() {
     std::cout << "Buffer size: " << buffer_size << std::endl;
     
     // Test platform initialization
-    clog::platform::init();  // Should not crash
+    clogger::platform::init();  // Should not crash
     SimpleIntegrationTest::assert_true(true, "Platform init completed");
 }
 
@@ -154,8 +154,8 @@ void test_direct_output() {
     std::cout << "\n--- Testing Direct Output ---" << std::endl;
     
     // Test without callback (direct output)
-    clog::Logger::setCallback(nullptr);
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setCallback(nullptr);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     std::cout << "The following should appear as direct output:" << std::endl;
     CLOG_ERROR("DirectTest", "Direct error output");
@@ -169,8 +169,8 @@ void test_performance_basic() {
     std::cout << "\n--- Testing Basic Performance ---" << std::endl;
     
     test_message_count = 0;
-    clog::Logger::setCallback(simpleTestCallback);
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setCallback(simpleTestCallback);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     // Generate many messages quickly
     const int num_messages = 1000;
@@ -178,7 +178,7 @@ void test_performance_basic() {
         CLOG_INFO("PerfTest", "Message %d", i);
     }
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     SimpleIntegrationTest::assert_true(test_message_count == num_messages, "All performance messages processed");
     SimpleIntegrationTest::assert_true(test_message_count <= num_messages + 10, "No unexpected extra messages");
@@ -191,8 +191,8 @@ void test_edge_cases() {
     
     test_messages.clear();
     test_message_count = 0;
-    clog::Logger::setCallback(simpleTestCallback);
-    clog::Logger::setLevel(clog::Level::TRACE);
+    clogger::Logger::setCallback(simpleTestCallback);
+    clogger::Logger::setLevel(clogger::Level::TRACE);
     
     // Test with empty strings
     CLOG_INFO("", "Empty tag test");
@@ -209,7 +209,7 @@ void test_edge_cases() {
     std::string long_message(200, 'B');
     CLOG_INFO("EdgeCase", "%s", long_message.c_str());
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     SimpleIntegrationTest::assert_true(test_message_count >= 5, "Edge case messages processed");
 }

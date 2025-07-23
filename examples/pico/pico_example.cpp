@@ -17,19 +17,19 @@ int main() {
     sleep_ms(1000);
     
     // Initialize platform-specific features
-    clog::platform::init();
+    clogger::platform::init();
     
     // Print configuration info
     printf("=== CLog Pico (RP2040) Example ===\n");
-    printf("Platform: %s\n", clog::platform::getName());
-    printf("Color support: %s\n", clog::platform::hasColorSupport() ? "Yes" : "No");
+    printf("Platform: %s\n", clogger::platform::getName());
+    printf("Color support: %s\n", clogger::platform::hasColorSupport() ? "Yes" : "No");
     
     // Print configuration details
-    clog::config::printConfig();
+    clogger::config::printConfig();
     printf("\n");
     
     // Set log level to show all messages
-    clog::Logger::setLevel(clog::Level::TRACE);
+    clogger::Logger::setLevel(clogger::Level::TRACE);
     
     // Basic logging test - show all levels
     printf("\n=== Basic Logging Test ===\n");
@@ -49,17 +49,17 @@ int main() {
     // Test different log levels
     printf("\n--- Testing different log levels ---\n");
     
-    clog::Logger::setLevel(clog::Level::ERROR);
+    clogger::Logger::setLevel(clogger::Level::ERROR);
     CLOG_ERROR("Level", "Only ERROR should appear");
     CLOG_WARN("Level", "This WARN should be hidden");
     CLOG_INFO("Level", "This INFO should be hidden");
     
-    clog::Logger::setLevel(clog::Level::WARN);
+    clogger::Logger::setLevel(clogger::Level::WARN);
     CLOG_ERROR("Level", "ERROR and WARN should appear");
     CLOG_WARN("Level", "WARN should appear");
     CLOG_INFO("Level", "This INFO should be hidden");
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     CLOG_ERROR("Level", "ERROR, WARN, and INFO should appear");
     CLOG_WARN("Level", "WARN should appear");
     CLOG_INFO("Level", "INFO should appear");
@@ -70,8 +70,8 @@ int main() {
     
     // Enable only specific tags (whitelist mode)
     printf("Enabling only Database and Security tags:\n");
-    clog::Logger::enableTag("Database");
-    clog::Logger::enableTag("Security");
+    clogger::Logger::enableTag("Database");
+    clogger::Logger::enableTag("Security");
     
     CLOG_INFO("Database", "Query executed successfully");      // Should appear
     CLOG_INFO("Network", "Data packet received");              // Should NOT appear
@@ -80,9 +80,9 @@ int main() {
     
     // Reset and disable specific tags (blacklist mode)
     printf("Disabling Network and UI tags:\n");
-    clog::Logger::enableAllTags();
-    clog::Logger::disableTag("Network");
-    clog::Logger::disableTag("UI");
+    clogger::Logger::enableAllTags();
+    clogger::Logger::disableTag("Network");
+    clogger::Logger::disableTag("UI");
     
     CLOG_INFO("Database", "Transaction committed");            // Should appear
     CLOG_INFO("Network", "Connection timeout");               // Should NOT appear
@@ -90,12 +90,12 @@ int main() {
     CLOG_INFO("UI", "Window resized");                        // Should NOT appear
     
     // Check tag status
-    printf("Database enabled: %s\n", clog::Logger::isTagEnabled("Database") ? "Yes" : "No");
-    printf("Network enabled: %s\n", clog::Logger::isTagEnabled("Network") ? "Yes" : "No");
+    printf("Database enabled: %s\n", clogger::Logger::isTagEnabled("Database") ? "Yes" : "No");
+    printf("Network enabled: %s\n", clogger::Logger::isTagEnabled("Network") ? "Yes" : "No");
     
     // Reset for final demo
-    clog::Logger::setLevel(clog::Level::INFO);
-    clog::Logger::enableAllTags();
+    clogger::Logger::setLevel(clogger::Level::INFO);
+    clogger::Logger::enableAllTags();
     
     // Simulate a typical application workflow
     printf("\n--- Simulating real-world usage ---\n");

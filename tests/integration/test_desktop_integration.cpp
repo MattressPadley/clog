@@ -63,16 +63,16 @@ void test_file_logging_integration() {
     std::vector<std::string> captured_logs;
     
     // Set up file logging callback
-    clog::Logger::setCallback([&captured_logs, &log_file](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&captured_logs, &log_file](clogger::Level level, const char* tag, const char* message) {
         std::ofstream file(log_file, std::ios::app);
         if (file.is_open()) {
             const char* level_str = "";
             switch (level) {
-                case clog::Level::ERROR: level_str = "ERROR"; break;
-                case clog::Level::WARN:  level_str = "WARN "; break;
-                case clog::Level::INFO:  level_str = "INFO "; break;
-                case clog::Level::DEBUG: level_str = "DEBUG"; break;
-                case clog::Level::TRACE: level_str = "TRACE"; break;
+                case clogger::Level::ERROR: level_str = "ERROR"; break;
+                case clogger::Level::WARN:  level_str = "WARN "; break;
+                case clogger::Level::INFO:  level_str = "INFO "; break;
+                case clogger::Level::DEBUG: level_str = "DEBUG"; break;
+                case clogger::Level::TRACE: level_str = "TRACE"; break;
                 default: level_str = "?????"; break;
             }
             
@@ -84,7 +84,7 @@ void test_file_logging_integration() {
         }
     });
     
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     // Remove any existing log file
     std::remove(log_file.c_str());
@@ -99,7 +99,7 @@ void test_file_logging_integration() {
     CLOG_INFO("FileTest", "Formatted message: %d items processed", 42);
     
     // Reset callback
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     // Verify file was created and contains expected content
     std::ifstream file(log_file);
@@ -130,12 +130,12 @@ void test_multithreaded_logging() {
     std::vector<std::string> all_messages;
     std::mutex message_mutex;
     
-    clog::Logger::setCallback([&all_messages, &message_mutex](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&all_messages, &message_mutex](clogger::Level level, const char* tag, const char* message) {
         std::lock_guard<std::mutex> lock(message_mutex);
         all_messages.push_back(std::string(tag) + ": " + message);
     });
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     const int num_threads = 4;
     const int messages_per_thread = 10;
@@ -156,7 +156,7 @@ void test_multithreaded_logging() {
         thread.join();
     }
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     // Verify all messages were captured
     IntegrationTest::assert_true(all_messages.size() == num_threads * messages_per_thread, 
@@ -183,14 +183,14 @@ void test_performance_integration() {
     int message_count = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
     
-    clog::Logger::setCallback([&message_count](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&message_count](clogger::Level level, const char* tag, const char* message) {
         message_count++;
         // Simulate some processing overhead
         volatile int dummy = 0;
         for (int i = 0; i < 10; i++) dummy += i;
     });
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     const int num_messages = 1000;
     
@@ -202,7 +202,7 @@ void test_performance_integration() {
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     IntegrationTest::assert_true(message_count == num_messages, "All performance test messages processed");
     IntegrationTest::assert_true(duration.count() < 5000, "Performance test completed in reasonable time");  // < 5 seconds
@@ -216,17 +216,17 @@ void test_platform_integration() {
     std::cout << "\n--- Testing Platform Integration ---" << std::endl;
     
     // Initialize platform
-    clog::platform::init();
+    clogger::platform::init();
     
     // Test that platform-specific features work
-    std::cout << "Platform: " << clog::platform::getName() << std::endl;
-    std::cout << "Buffer size: " << clog::platform::getDefaultBufferSize() << std::endl;
-    std::cout << "Color support: " << (clog::platform::hasColorSupport() ? "Yes" : "No") << std::endl;
-    std::cout << "Printf support: " << (clog::platform::hasPrintfSupport() ? "Yes" : "No") << std::endl;
+    std::cout << "Platform: " << clogger::platform::getName() << std::endl;
+    std::cout << "Buffer size: " << clogger::platform::getDefaultBufferSize() << std::endl;
+    std::cout << "Color support: " << (clogger::platform::hasColorSupport() ? "Yes" : "No") << std::endl;
+    std::cout << "Printf support: " << (clogger::platform::hasPrintfSupport() ? "Yes" : "No") << std::endl;
     
     // Test direct output (without callback)
-    clog::Logger::setCallback(nullptr);
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setCallback(nullptr);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     
     std::cout << "\nDirect output test (should appear in console):" << std::endl;
     CLOG_ERROR("Platform", "Platform integration error test");
@@ -241,27 +241,27 @@ void test_configuration_integration() {
     std::cout << "\n--- Testing Configuration Integration ---" << std::endl;
     
     // Test that configuration values are accessible and reasonable
-    std::cout << "Buffer size: " << clog::config::BUFFER_SIZE << std::endl;
-    std::cout << "Default level: " << static_cast<int>(clog::config::DEFAULT_LEVEL) << std::endl;
-    std::cout << "Max tag length: " << clog::config::MAX_TAG_LENGTH << std::endl;
+    std::cout << "Buffer size: " << clogger::config::BUFFER_SIZE << std::endl;
+    std::cout << "Default level: " << static_cast<int>(clogger::config::DEFAULT_LEVEL) << std::endl;
+    std::cout << "Max tag length: " << clogger::config::MAX_TAG_LENGTH << std::endl;
     
-    IntegrationTest::assert_true(clog::config::BUFFER_SIZE >= 64, "Buffer size minimum");
-    IntegrationTest::assert_true(clog::config::BUFFER_SIZE <= 4096, "Buffer size maximum");
-    IntegrationTest::assert_true(static_cast<int>(clog::config::DEFAULT_LEVEL) >= 0, "Default level minimum");
-    IntegrationTest::assert_true(static_cast<int>(clog::config::DEFAULT_LEVEL) <= 5, "Default level maximum");
+    IntegrationTest::assert_true(clogger::config::BUFFER_SIZE >= 64, "Buffer size minimum");
+    IntegrationTest::assert_true(clogger::config::BUFFER_SIZE <= 4096, "Buffer size maximum");
+    IntegrationTest::assert_true(static_cast<int>(clogger::config::DEFAULT_LEVEL) >= 0, "Default level minimum");
+    IntegrationTest::assert_true(static_cast<int>(clogger::config::DEFAULT_LEVEL) <= 5, "Default level maximum");
     
     // Test very long tag names
     std::string long_tag(100, 'A');  // 100 character tag
     
     std::vector<std::string> captured;
-    clog::Logger::setCallback([&captured](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&captured](clogger::Level level, const char* tag, const char* message) {
         captured.push_back(std::string(tag) + ": " + message);
     });
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     CLOG_INFO(long_tag.c_str(), "Test with very long tag");
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     IntegrationTest::assert_true(captured.size() == 1, "Long tag message captured");
     IntegrationTest::assert_true(captured[0].find("Test with very long tag") != std::string::npos, "Long tag message content correct");
@@ -280,17 +280,17 @@ void test_real_world_scenario() {
     
     LogStats stats;
     
-    clog::Logger::setCallback([&stats](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([&stats](clogger::Level level, const char* tag, const char* message) {
         switch (level) {
-            case clog::Level::ERROR: stats.errors++; break;
-            case clog::Level::WARN: stats.warnings++; break;
-            case clog::Level::INFO: stats.infos++; break;
-            case clog::Level::DEBUG: stats.debugs++; break;
+            case clogger::Level::ERROR: stats.errors++; break;
+            case clogger::Level::WARN: stats.warnings++; break;
+            case clogger::Level::INFO: stats.infos++; break;
+            case clogger::Level::DEBUG: stats.debugs++; break;
             default: break;
         }
     });
     
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     // Simulate a real application workflow
     CLOG_INFO("App", "Application starting...");
@@ -318,7 +318,7 @@ void test_real_world_scenario() {
     
     CLOG_INFO("App", "Application shutdown complete");
     
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     
     // Verify expected message counts
     IntegrationTest::assert_true(stats.errors == 1, "Expected number of errors");

@@ -6,19 +6,19 @@
 
 int main() {
     // Initialize platform-specific features
-    clog::platform::init();
+    clogger::platform::init();
     
     // Print configuration info
     std::cout << "=== CLog Desktop Example ===" << std::endl;
-    std::cout << "Platform: " << clog::platform::getName() << std::endl;
-    std::cout << "Color support: " << (clog::platform::hasColorSupport() ? "Yes" : "No") << std::endl;
+    std::cout << "Platform: " << clogger::platform::getName() << std::endl;
+    std::cout << "Color support: " << (clogger::platform::hasColorSupport() ? "Yes" : "No") << std::endl;
     
     // Print configuration details
-    clog::config::printConfig();
+    clogger::config::printConfig();
     std::cout << std::endl;
     
     // Set log level to show all messages
-    clog::Logger::setLevel(clog::Level::TRACE);
+    clogger::Logger::setLevel(clogger::Level::TRACE);
     
     // Color and level format test - show all levels
     std::cout << "\n=== Color and Level Format Test ===" << std::endl;
@@ -33,14 +33,14 @@ int main() {
     std::cout << "Setting up custom colors for different system components..." << std::endl;
     
     // Configure colors for different system components
-    clog::Logger::setTagColor("Database", clog::Color::BRIGHT_CYAN);
-    clog::Logger::setTagColor("Network", clog::Color::BRIGHT_MAGENTA);  
-    clog::Logger::setTagColor("Security", clog::Color::BRIGHT_RED);
-    clog::Logger::setTagColor("Performance", clog::Color::BRIGHT_YELLOW);
-    clog::Logger::setTagColor("UI", clog::Color::BRIGHT_GREEN);
-    clog::Logger::setTagColor("FileSystem", clog::Color::BLUE);
-    clog::Logger::setTagColor("Memory", clog::Color::CYAN);
-    clog::Logger::setTagColor("Audio", clog::Color::MAGENTA);
+    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);  
+    clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
+    clogger::Logger::setTagColor("Performance", clogger::Color::BRIGHT_YELLOW);
+    clogger::Logger::setTagColor("UI", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("FileSystem", clogger::Color::BLUE);
+    clogger::Logger::setTagColor("Memory", clogger::Color::CYAN);
+    clogger::Logger::setTagColor("Audio", clogger::Color::MAGENTA);
     
     std::cout << "\nNow observe how each tag appears in its configured color:" << std::endl;
     
@@ -61,20 +61,20 @@ int main() {
     std::cout << "Here's a showcase of all available colors:" << std::endl;
     
     // Showcase all available colors
-    clog::Logger::setTagColor("RED", clog::Color::RED);
-    clog::Logger::setTagColor("GREEN", clog::Color::GREEN);
-    clog::Logger::setTagColor("YELLOW", clog::Color::YELLOW);
-    clog::Logger::setTagColor("BLUE", clog::Color::BLUE);
-    clog::Logger::setTagColor("MAGENTA", clog::Color::MAGENTA);
-    clog::Logger::setTagColor("CYAN", clog::Color::CYAN);
-    clog::Logger::setTagColor("WHITE", clog::Color::WHITE);
-    clog::Logger::setTagColor("B_RED", clog::Color::BRIGHT_RED);
-    clog::Logger::setTagColor("B_GREEN", clog::Color::BRIGHT_GREEN);
-    clog::Logger::setTagColor("B_YELLOW", clog::Color::BRIGHT_YELLOW);
-    clog::Logger::setTagColor("B_BLUE", clog::Color::BRIGHT_BLUE);
-    clog::Logger::setTagColor("B_MAGENTA", clog::Color::BRIGHT_MAGENTA);
-    clog::Logger::setTagColor("B_CYAN", clog::Color::BRIGHT_CYAN);
-    clog::Logger::setTagColor("B_WHITE", clog::Color::BRIGHT_WHITE);
+    clogger::Logger::setTagColor("RED", clogger::Color::RED);
+    clogger::Logger::setTagColor("GREEN", clogger::Color::GREEN);
+    clogger::Logger::setTagColor("YELLOW", clogger::Color::YELLOW);
+    clogger::Logger::setTagColor("BLUE", clogger::Color::BLUE);
+    clogger::Logger::setTagColor("MAGENTA", clogger::Color::MAGENTA);
+    clogger::Logger::setTagColor("CYAN", clogger::Color::CYAN);
+    clogger::Logger::setTagColor("WHITE", clogger::Color::WHITE);
+    clogger::Logger::setTagColor("B_RED", clogger::Color::BRIGHT_RED);
+    clogger::Logger::setTagColor("B_GREEN", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("B_YELLOW", clogger::Color::BRIGHT_YELLOW);
+    clogger::Logger::setTagColor("B_BLUE", clogger::Color::BRIGHT_BLUE);
+    clogger::Logger::setTagColor("B_MAGENTA", clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("B_CYAN", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setTagColor("B_WHITE", clogger::Color::BRIGHT_WHITE);
     
     CLOG_INFO("RED", "Regular red color");
     CLOG_INFO("GREEN", "Regular green color");
@@ -94,13 +94,13 @@ int main() {
     std::cout << "\n--- Dynamic Color Management ---" << std::endl;
     CLOG_INFO("TempTag", "This tag will change color...");
     
-    clog::Logger::setTagColor("TempTag", clog::Color::BRIGHT_RED);
+    clogger::Logger::setTagColor("TempTag", clogger::Color::BRIGHT_RED);
     CLOG_INFO("TempTag", "Now I'm bright red!");
     
-    clog::Logger::setTagColor("TempTag", clog::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("TempTag", clogger::Color::BRIGHT_GREEN);
     CLOG_INFO("TempTag", "Now I'm bright green!");
     
-    clog::Logger::clearTagColor("TempTag");
+    clogger::Logger::clearTagColor("TempTag");
     CLOG_INFO("TempTag", "Back to default color after clearing");
     
     // Demonstrate basic logging
@@ -121,17 +121,17 @@ int main() {
     // Demonstrate different log levels
     std::cout << "\n--- Testing different log levels ---" << std::endl;
     
-    clog::Logger::setLevel(clog::Level::ERROR);
+    clogger::Logger::setLevel(clogger::Level::ERROR);
     CLOG_ERROR("Level", "Only ERROR should appear");
     CLOG_WARN("Level", "This WARN should be hidden");
     CLOG_INFO("Level", "This INFO should be hidden");
     
-    clog::Logger::setLevel(clog::Level::WARN);
+    clogger::Logger::setLevel(clogger::Level::WARN);
     CLOG_ERROR("Level", "ERROR and WARN should appear");
     CLOG_WARN("Level", "WARN should appear");
     CLOG_INFO("Level", "This INFO should be hidden");
     
-    clog::Logger::setLevel(clog::Level::INFO);
+    clogger::Logger::setLevel(clogger::Level::INFO);
     CLOG_ERROR("Level", "ERROR, WARN, and INFO should appear");
     CLOG_WARN("Level", "WARN should appear");
     CLOG_INFO("Level", "INFO should appear");
@@ -140,14 +140,14 @@ int main() {
     // Demonstrate callback functionality
     std::cout << "\n--- Testing callback functionality ---" << std::endl;
     
-    clog::Logger::setCallback([](clog::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([](clogger::Level level, const char* tag, const char* message) {
         const char* levelStr = "";
         switch (level) {
-            case clog::Level::ERROR: levelStr = "ERROR"; break;
-            case clog::Level::WARN:  levelStr = "WARN "; break;
-            case clog::Level::INFO:  levelStr = "INFO "; break;
-            case clog::Level::DEBUG: levelStr = "DEBUG"; break;
-            case clog::Level::TRACE: levelStr = "TRACE"; break;
+            case clogger::Level::ERROR: levelStr = "ERROR"; break;
+            case clogger::Level::WARN:  levelStr = "WARN "; break;
+            case clogger::Level::INFO:  levelStr = "INFO "; break;
+            case clogger::Level::DEBUG: levelStr = "DEBUG"; break;
+            case clogger::Level::TRACE: levelStr = "TRACE"; break;
             default: levelStr = "?????"; break;
         }
         std::cout << "[CALLBACK:" << levelStr << "] " << tag << ": " << message << std::endl;
@@ -157,7 +157,7 @@ int main() {
     CLOG_ERROR("Callback", "Error messages also go through callback");
     
     // Reset to direct output
-    clog::Logger::setCallback(nullptr);
+    clogger::Logger::setCallback(nullptr);
     CLOG_INFO("Main", "Back to direct output");
     
     std::cout << "\n--- Testing Tag Filtering Feature ---" << std::endl;
@@ -166,7 +166,7 @@ int main() {
     std::cout << "Testing new tag filtering functionality..." << std::endl;
     
     // Start with all tags enabled (default behavior)
-    clog::Logger::enableAllTags();
+    clogger::Logger::enableAllTags();
     std::cout << "\n1. All tags enabled (default):" << std::endl;
     CLOG_INFO("Database", "Connection established");
     CLOG_INFO("Network", "Socket opened");
@@ -174,8 +174,8 @@ int main() {
     
     // Enable only specific tags (whitelist mode)
     std::cout << "\n2. Only Database and Security tags enabled:" << std::endl;
-    clog::Logger::enableTag("Database");  // This switches to whitelist mode
-    clog::Logger::enableTag("Security");
+    clogger::Logger::enableTag("Database");  // This switches to whitelist mode
+    clogger::Logger::enableTag("Security");
     
     CLOG_INFO("Database", "Query executed successfully");      // Should appear
     CLOG_INFO("Network", "Data packet received");              // Should NOT appear
@@ -184,9 +184,9 @@ int main() {
     
     // Disable specific tags (blacklist mode)
     std::cout << "\n3. All tags except Network and UI enabled:" << std::endl;
-    clog::Logger::enableAllTags();         // Reset to allow all
-    clog::Logger::disableTag("Network");   // This switches to blacklist mode
-    clog::Logger::disableTag("UI");
+    clogger::Logger::enableAllTags();         // Reset to allow all
+    clogger::Logger::disableTag("Network");   // This switches to blacklist mode
+    clogger::Logger::disableTag("UI");
     
     CLOG_INFO("Database", "Transaction committed");            // Should appear
     CLOG_INFO("Network", "Connection timeout");               // Should NOT appear
@@ -195,26 +195,26 @@ int main() {
     
     // Disable all tags, then enable specific ones
     std::cout << "\n4. Start with no tags, then enable Database only:" << std::endl;
-    clog::Logger::disableAllTags();        // Disable everything
+    clogger::Logger::disableAllTags();        // Disable everything
     
     CLOG_INFO("Database", "Should not appear");
     CLOG_INFO("Security", "Should not appear");
     
-    clog::Logger::enableTag("Database");   // Enable just Database
+    clogger::Logger::enableTag("Database");   // Enable just Database
     CLOG_INFO("Database", "Now Database appears");             // Should appear
     CLOG_INFO("Security", "Security still hidden");           // Should NOT appear
     
     // Check tag status
     std::cout << "\n5. Checking tag status programmatically:" << std::endl;
-    std::cout << "Database enabled: " << (clog::Logger::isTagEnabled("Database") ? "Yes" : "No") << std::endl;
-    std::cout << "Security enabled: " << (clog::Logger::isTagEnabled("Security") ? "Yes" : "No") << std::endl;
-    std::cout << "Network enabled: " << (clog::Logger::isTagEnabled("Network") ? "Yes" : "No") << std::endl;
+    std::cout << "Database enabled: " << (clogger::Logger::isTagEnabled("Database") ? "Yes" : "No") << std::endl;
+    std::cout << "Security enabled: " << (clogger::Logger::isTagEnabled("Security") ? "Yes" : "No") << std::endl;
+    std::cout << "Network enabled: " << (clogger::Logger::isTagEnabled("Network") ? "Yes" : "No") << std::endl;
     
     // Demonstrate tag filtering with different log levels
     std::cout << "\n6. Tag filtering combined with log levels:" << std::endl;
-    clog::Logger::setLevel(clog::Level::WARN);  // Only ERROR and WARN
-    clog::Logger::enableAllTags();              // Allow all tags
-    clog::Logger::disableTag("Debug");          // But disable Debug tag
+    clogger::Logger::setLevel(clogger::Level::WARN);  // Only ERROR and WARN
+    clogger::Logger::enableAllTags();              // Allow all tags
+    clogger::Logger::disableTag("Debug");          // But disable Debug tag
     
     CLOG_ERROR("System", "Critical error occurred");           // Should appear (ERROR level, tag allowed)
     CLOG_WARN("System", "Warning message");                    // Should appear (WARN level, tag allowed)
@@ -222,8 +222,8 @@ int main() {
     CLOG_ERROR("Debug", "Debug error");                        // Should NOT appear (tag disabled)
     
     // Reset for next demo
-    clog::Logger::setLevel(clog::Level::INFO);
-    clog::Logger::enableAllTags();
+    clogger::Logger::setLevel(clogger::Level::INFO);
+    clogger::Logger::enableAllTags();
     
     std::cout << "\n--- Simulating real-world usage ---" << std::endl;
     

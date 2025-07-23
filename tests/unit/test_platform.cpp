@@ -48,7 +48,7 @@ void test_platform_detection() {
     std::cout << "\n--- Testing Platform Detection ---" << std::endl;
     
     // Platform name should not be empty
-    const char* platform_name = clog::platform::getName();
+    const char* platform_name = clogger::platform::getName();
     TestFramework::assert_not_null(platform_name, "Platform name not null");
     TestFramework::assert_not_empty(std::string(platform_name), "Platform name not empty");
     
@@ -89,19 +89,19 @@ void test_platform_features() {
     std::cout << "\n--- Testing Platform Features ---" << std::endl;
     
     // Test color support detection
-    bool has_color = clog::platform::hasColorSupport();
+    bool has_color = clogger::platform::hasColorSupport();
     std::cout << "Color support: " << (has_color ? "Yes" : "No") << std::endl;
     
     // Test printf support detection
-    bool has_printf = clog::platform::hasPrintfSupport();
+    bool has_printf = clogger::platform::hasPrintfSupport();
     std::cout << "Printf support: " << (has_printf ? "Yes" : "No") << std::endl;
     
     // Test embedded detection
-    bool is_embedded = clog::platform::isEmbedded();
+    bool is_embedded = clogger::platform::isEmbedded();
     std::cout << "Is embedded: " << (is_embedded ? "Yes" : "No") << std::endl;
     
     // Test default buffer size
-    size_t buffer_size = clog::platform::getDefaultBufferSize();
+    size_t buffer_size = clogger::platform::getDefaultBufferSize();
     TestFramework::assert_true(buffer_size > 0, "Default buffer size > 0");
     TestFramework::assert_true(buffer_size >= 64, "Default buffer size >= 64");
     TestFramework::assert_true(buffer_size <= 2048, "Default buffer size <= 2048");
@@ -126,7 +126,7 @@ void test_platform_initialization() {
     
     // Init should not crash
     try {
-        clog::platform::init();
+        clogger::platform::init();
         TestFramework::assert_true(true, "Platform init completed without exception");
     } catch (...) {
         TestFramework::assert_true(false, "Platform init threw exception");
@@ -146,30 +146,30 @@ void test_compile_time_constants() {
     std::cout << "CLOG_HAS_PRINTF_SUPPORT: " << CLOG_HAS_PRINTF_SUPPORT << std::endl;
     
     // Test consistency between compile-time and runtime values
-    TestFramework::assert_true(clog::platform::hasColorSupport() == (CLOG_HAS_COLOR_SUPPORT != 0),
+    TestFramework::assert_true(clogger::platform::hasColorSupport() == (CLOG_HAS_COLOR_SUPPORT != 0),
                               "Runtime color support matches compile-time");
-    TestFramework::assert_true(clog::platform::hasPrintfSupport() == (CLOG_HAS_PRINTF_SUPPORT != 0),
+    TestFramework::assert_true(clogger::platform::hasPrintfSupport() == (CLOG_HAS_PRINTF_SUPPORT != 0),
                               "Runtime printf support matches compile-time");
 }
 
 void test_platform_specific_behavior() {
     std::cout << "\n--- Testing Platform-Specific Behavior ---" << std::endl;
     
-    const char* platform = clog::platform::getName();
+    const char* platform = clogger::platform::getName();
     
     // Test platform-specific expectations
     if (std::string(platform) == "Linux" || std::string(platform) == "macOS" || std::string(platform) == "Windows") {
-        TestFramework::assert_true(clog::platform::hasColorSupport(), "Desktop platforms should support colors");
-        TestFramework::assert_false(clog::platform::isEmbedded(), "Desktop platforms are not embedded");
+        TestFramework::assert_true(clogger::platform::hasColorSupport(), "Desktop platforms should support colors");
+        TestFramework::assert_false(clogger::platform::isEmbedded(), "Desktop platforms are not embedded");
     }
     
     if (std::string(platform) == "ESP32" || std::string(platform) == "RP2040-SDK" || std::string(platform) == "Arduino-AVR") {
-        TestFramework::assert_true(clog::platform::isEmbedded(), "Embedded platforms should be detected as embedded");
-        TestFramework::assert_true(clog::platform::getDefaultBufferSize() <= 512, "Embedded platforms should have smaller buffers");
+        TestFramework::assert_true(clogger::platform::isEmbedded(), "Embedded platforms should be detected as embedded");
+        TestFramework::assert_true(clogger::platform::getDefaultBufferSize() <= 512, "Embedded platforms should have smaller buffers");
     }
     
     // All platforms should have a reasonable buffer size
-    size_t buffer_size = clog::platform::getDefaultBufferSize();
+    size_t buffer_size = clogger::platform::getDefaultBufferSize();
     TestFramework::assert_true(buffer_size >= 64 && buffer_size <= 2048, "Buffer size in reasonable range");
 }
 

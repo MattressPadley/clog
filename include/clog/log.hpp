@@ -18,7 +18,7 @@
     #define CLOG_PLATFORM_UNKNOWN
 #endif
 
-namespace clog {
+namespace clogger {
 
 enum class Level {
     OFF = 0,
@@ -127,14 +127,14 @@ private:
 #endif
 };
 
-} // namespace clog
+} // namespace clogger
 
 // Convenience macros for easy usage
-#define CLOG_ERROR(tag, fmt, ...)   clog::Logger::error(tag, fmt, ##__VA_ARGS__)
-#define CLOG_WARN(tag, fmt, ...)    clog::Logger::warn(tag, fmt, ##__VA_ARGS__)
-#define CLOG_INFO(tag, fmt, ...)    clog::Logger::info(tag, fmt, ##__VA_ARGS__)
-#define CLOG_DEBUG(tag, fmt, ...)   clog::Logger::debug(tag, fmt, ##__VA_ARGS__)
-#define CLOG_TRACE(tag, fmt, ...)   clog::Logger::trace(tag, fmt, ##__VA_ARGS__)
+#define CLOG_ERROR(tag, fmt, ...)   clogger::Logger::error(tag, fmt, ##__VA_ARGS__)
+#define CLOG_WARN(tag, fmt, ...)    clogger::Logger::warn(tag, fmt, ##__VA_ARGS__)
+#define CLOG_INFO(tag, fmt, ...)    clogger::Logger::info(tag, fmt, ##__VA_ARGS__)
+#define CLOG_DEBUG(tag, fmt, ...)   clogger::Logger::debug(tag, fmt, ##__VA_ARGS__)
+#define CLOG_TRACE(tag, fmt, ...)   clogger::Logger::trace(tag, fmt, ##__VA_ARGS__)
 
 // Compile-time level filtering
 #ifndef CLOG_LEVEL
@@ -163,20 +163,20 @@ private:
 #endif
 
 // Implementation (header-only)
-namespace clog {
+namespace clogger {
 
 // Static member definitions
-Level Logger::currentLevel = Level::INFO;
-Logger::Callback Logger::logCallback = nullptr;
-bool Logger::directOutput = true;
-Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
+inline Level Logger::currentLevel = Level::INFO;
+inline Logger::Callback Logger::logCallback = nullptr;
+inline bool Logger::directOutput = true;
+inline Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
 #if CLOG_ENABLE_TAG_FILTERING
-Logger::TagFilter Logger::tagFilters[CLOG_MAX_TAG_FILTERS] = {};
-Logger::TagFilterMode Logger::filterMode = Logger::TagFilterMode::ALLOW_ALL;
+inline Logger::TagFilter Logger::tagFilters[CLOG_MAX_TAG_FILTERS] = {};
+inline Logger::TagFilterMode Logger::filterMode = Logger::TagFilterMode::ALLOW_ALL;
 #endif
 
-void Logger::log(Level level, const char* tag, const char* format, ...) {
+inline void Logger::log(Level level, const char* tag, const char* format, ...) {
     if (level > currentLevel) return;
     
 #if CLOG_ENABLE_TAG_FILTERING
@@ -192,7 +192,7 @@ void Logger::log(Level level, const char* tag, const char* format, ...) {
     output(level, tag, buffer);
 }
 
-void Logger::output(Level level, const char* tag, const char* message) {
+inline void Logger::output(Level level, const char* tag, const char* message) {
     if (logCallback) {
         logCallback(level, tag, message);
     } else if (directOutput) {
@@ -218,12 +218,12 @@ void Logger::output(Level level, const char* tag, const char* message) {
     }
 }
 
-void Logger::setCallback(Callback callback) {
+inline void Logger::setCallback(Callback callback) {
     logCallback = callback;
     directOutput = (callback == nullptr);
 }
 
-const char* Logger::levelToString(Level level) {
+inline const char* Logger::levelToString(Level level) {
     switch (level) {
         case Level::ERROR: return "ERROR";
         case Level::WARN:  return "WARN ";
@@ -234,7 +234,7 @@ const char* Logger::levelToString(Level level) {
     }
 }
 
-const char* Logger::levelToColor(Level level) {
+inline const char* Logger::levelToColor(Level level) {
     switch (level) {
         case Level::ERROR: return "\033[91m";  // Bright red
         case Level::WARN:  return "\033[93m";  // Bright yellow
@@ -246,7 +246,7 @@ const char* Logger::levelToColor(Level level) {
 }
 
 // Convenience method implementations
-void Logger::error(const char* tag, const char* format, ...) {
+inline void Logger::error(const char* tag, const char* format, ...) {
     if (Level::ERROR > currentLevel) return;
 #if CLOG_ENABLE_TAG_FILTERING
     if (!checkTagFilter(tag)) return;
@@ -259,7 +259,7 @@ void Logger::error(const char* tag, const char* format, ...) {
     output(Level::ERROR, tag, buffer);
 }
 
-void Logger::warn(const char* tag, const char* format, ...) {
+inline void Logger::warn(const char* tag, const char* format, ...) {
     if (Level::WARN > currentLevel) return;
 #if CLOG_ENABLE_TAG_FILTERING
     if (!checkTagFilter(tag)) return;
@@ -272,7 +272,7 @@ void Logger::warn(const char* tag, const char* format, ...) {
     output(Level::WARN, tag, buffer);
 }
 
-void Logger::info(const char* tag, const char* format, ...) {
+inline void Logger::info(const char* tag, const char* format, ...) {
     if (Level::INFO > currentLevel) return;
 #if CLOG_ENABLE_TAG_FILTERING
     if (!checkTagFilter(tag)) return;
@@ -285,7 +285,7 @@ void Logger::info(const char* tag, const char* format, ...) {
     output(Level::INFO, tag, buffer);
 }
 
-void Logger::debug(const char* tag, const char* format, ...) {
+inline void Logger::debug(const char* tag, const char* format, ...) {
     if (Level::DEBUG > currentLevel) return;
 #if CLOG_ENABLE_TAG_FILTERING
     if (!checkTagFilter(tag)) return;
@@ -298,7 +298,7 @@ void Logger::debug(const char* tag, const char* format, ...) {
     output(Level::DEBUG, tag, buffer);
 }
 
-void Logger::trace(const char* tag, const char* format, ...) {
+inline void Logger::trace(const char* tag, const char* format, ...)  {
     if (Level::TRACE > currentLevel) return;
 #if CLOG_ENABLE_TAG_FILTERING
     if (!checkTagFilter(tag)) return;
@@ -311,10 +311,10 @@ void Logger::trace(const char* tag, const char* format, ...) {
     output(Level::TRACE, tag, buffer);
 }
 
-void Logger::setLevel(Level level) { currentLevel = level; }
-Level Logger::getLevel() { return currentLevel; }
-void Logger::enableDirectOutput(bool enabled) { directOutput = enabled; }
-void Logger::init() {
+inline void Logger::setLevel(Level level) { currentLevel = level; }
+inline Level Logger::getLevel() { return currentLevel; }
+inline void Logger::enableDirectOutput(bool enabled) { directOutput = enabled; }
+inline void Logger::init() {
     // Platform-specific initialization if needed
 #ifdef CLOG_PLATFORM_ARDUINO
     // Serial already initialized by Arduino framework
@@ -322,7 +322,7 @@ void Logger::init() {
 }
 
 // Tag color management
-void Logger::setTagColor(const char* tag, Color color) {
+inline void Logger::setTagColor(const char* tag, Color color) {
     // First check if tag already exists
     for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
         if (tagColors[i].active && strcmp(tagColors[i].tag, tag) == 0) {
@@ -343,7 +343,7 @@ void Logger::setTagColor(const char* tag, Color color) {
     }
 }
 
-void Logger::clearTagColor(const char* tag) {
+inline void Logger::clearTagColor(const char* tag) {
     for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
         if (tagColors[i].active && strcmp(tagColors[i].tag, tag) == 0) {
             tagColors[i].active = false;
@@ -352,13 +352,13 @@ void Logger::clearTagColor(const char* tag) {
     }
 }
 
-void Logger::clearAllTagColors() {
+inline void Logger::clearAllTagColors() {
     for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
         tagColors[i].active = false;
     }
 }
 
-Color Logger::getTagColor(const char* tag) {
+inline Color Logger::getTagColor(const char* tag) {
     for (size_t i = 0; i < MAX_TAG_COLORS; i++) {
         if (tagColors[i].active && strcmp(tagColors[i].tag, tag) == 0) {
             return tagColors[i].color;
@@ -367,7 +367,7 @@ Color Logger::getTagColor(const char* tag) {
     return Color::DEFAULT;
 }
 
-const char* Logger::colorToAnsi(Color color) {
+inline const char* Logger::colorToAnsi(Color color) {
     switch (color) {
         case Color::DEFAULT:      return "";
         case Color::BLACK:        return "\033[30m";
@@ -392,7 +392,7 @@ const char* Logger::colorToAnsi(Color color) {
 
 #if CLOG_ENABLE_TAG_FILTERING
 // Tag filtering implementation
-bool Logger::checkTagFilter(const char* tag) {
+inline bool Logger::checkTagFilter(const char* tag) {
     if (filterMode == TagFilterMode::ALLOW_ALL) {
         return true;
     }
@@ -407,7 +407,7 @@ bool Logger::checkTagFilter(const char* tag) {
     }
 }
 
-int Logger::findTagFilter(const char* tag) {
+inline int Logger::findTagFilter(const char* tag) {
     for (size_t i = 0; i < CLOG_MAX_TAG_FILTERS; i++) {
         if (tagFilters[i].active && strcmp(tagFilters[i].tag, tag) == 0) {
             return static_cast<int>(i);
@@ -416,7 +416,7 @@ int Logger::findTagFilter(const char* tag) {
     return -1;
 }
 
-void Logger::enableTag(const char* tag) {
+inline void Logger::enableTag(const char* tag) {
     // If we're in ALLOW_ALL mode, switch to WHITELIST and add this tag
     if (filterMode == TagFilterMode::ALLOW_ALL) {
         filterMode = TagFilterMode::WHITELIST;
@@ -447,7 +447,7 @@ void Logger::enableTag(const char* tag) {
     }
 }
 
-void Logger::disableTag(const char* tag) {
+inline void Logger::disableTag(const char* tag) {
     // If we're in ALLOW_ALL mode, switch to BLACKLIST and add this tag
     if (filterMode == TagFilterMode::ALLOW_ALL) {
         filterMode = TagFilterMode::BLACKLIST;
@@ -478,25 +478,25 @@ void Logger::disableTag(const char* tag) {
     }
 }
 
-void Logger::enableAllTags() {
+inline void Logger::enableAllTags() {
     filterMode = TagFilterMode::ALLOW_ALL;
     clearTagFilters();
 }
 
-void Logger::disableAllTags() {
+inline void Logger::disableAllTags() {
     filterMode = TagFilterMode::WHITELIST;
     clearTagFilters();
 }
 
-bool Logger::isTagEnabled(const char* tag) {
+inline bool Logger::isTagEnabled(const char* tag) {
     return checkTagFilter(tag);
 }
 
-void Logger::clearTagFilters() {
+inline void Logger::clearTagFilters() {
     for (size_t i = 0; i < CLOG_MAX_TAG_FILTERS; i++) {
         tagFilters[i].active = false;
     }
 }
 #endif // CLOG_ENABLE_TAG_FILTERING
 
-} // namespace clog
+} // namespace clogger

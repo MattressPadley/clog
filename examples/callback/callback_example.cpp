@@ -26,7 +26,7 @@ private:
     
 public:
     // Method to receive logs from CLog
-    void handleCLogMessage(clog::Level level, const char* tag, const char* message) {
+    void handleCLogMessage(clogger::Level level, const char* tag, const char* message) {
         LogEntry entry;
         entry.timestamp = getCurrentTimestamp();
         entry.level = clogLevelToString(level);
@@ -91,13 +91,13 @@ private:
         return ss.str();
     }
     
-    std::string clogLevelToString(clog::Level level) {
+    std::string clogLevelToString(clogger::Level level) {
         switch (level) {
-            case clog::Level::ERROR: return "ERROR";
-            case clog::Level::WARN:  return "WARN";
-            case clog::Level::INFO:  return "INFO";
-            case clog::Level::DEBUG: return "DEBUG";
-            case clog::Level::TRACE: return "TRACE";
+            case clogger::Level::ERROR: return "ERROR";
+            case clogger::Level::WARN:  return "WARN";
+            case clogger::Level::INFO:  return "INFO";
+            case clogger::Level::DEBUG: return "DEBUG";
+            case clogger::Level::TRACE: return "TRACE";
             default: return "UNKNOWN";
         }
     }
@@ -153,7 +153,7 @@ private:
 ApplicationLogger appLogger;
 
 // Callback function to bridge CLog to ApplicationLogger
-void clogCallback(clog::Level level, const char* tag, const char* message) {
+void clogCallback(clogger::Level level, const char* tag, const char* message) {
     appLogger.handleCLogMessage(level, tag, message);
 }
 
@@ -240,8 +240,8 @@ int main() {
     std::cout << "=== CLog Callback Integration Example ===" << std::endl;
     
     // Set up CLog to use our callback
-    clog::Logger::setCallback(clogCallback);
-    clog::Logger::setLevel(clog::Level::TRACE);  // Show all messages
+    clogger::Logger::setCallback(clogCallback);
+    clogger::Logger::setLevel(clogger::Level::TRACE);  // Show all messages
     
     CLOG_INFO("Main", "Application starting with CLog integration");
     

@@ -77,7 +77,7 @@
 #endif
 
 // Configuration validation
-namespace clog {
+namespace clogger {
 namespace config {
 
 // Validate configuration at compile time
@@ -119,15 +119,15 @@ inline void printConfig() {
 }
 
 } // namespace config
-} // namespace clog
+} // namespace clogger
 
 // Enhanced macros with file/line information (if enabled)
 #if CLOG_ENABLE_FILE_LINE
-    #define CLOG_ERROR_FL(tag, fmt, ...)   clog::Logger::error(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_WARN_FL(tag, fmt, ...)    clog::Logger::warn(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_INFO_FL(tag, fmt, ...)    clog::Logger::info(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_DEBUG_FL(tag, fmt, ...)   clog::Logger::debug(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_TRACE_FL(tag, fmt, ...)   clog::Logger::trace(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
+    #define CLOG_ERROR_FL(tag, fmt, ...)   clogger::Logger::error(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
+    #define CLOG_WARN_FL(tag, fmt, ...)    clogger::Logger::warn(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
+    #define CLOG_INFO_FL(tag, fmt, ...)    clogger::Logger::info(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
+    #define CLOG_DEBUG_FL(tag, fmt, ...)   clogger::Logger::debug(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
+    #define CLOG_TRACE_FL(tag, fmt, ...)   clogger::Logger::trace(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
     
     #define STRINGIFY(x) #x
 #endif

@@ -22,7 +22,7 @@ CLog is a lightweight, header-only C++ logging library designed for cross-platfo
 
 int main() {
     // Set log level
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     // Basic logging
     CLOG_ERROR("MyApp", "Something went wrong: %d", error_code);
@@ -40,15 +40,15 @@ int main() {
 ```cpp
 #include <clog/log.hpp>
 
-void myLogCallback(clog::Level level, const char* tag, const char* message) {
+void myLogCallback(clogger::Level level, const char* tag, const char* message) {
     // Route CLog messages to your existing logging system
     printf("[%s] %s: %s\n", levelToString(level), tag, message);
 }
 
 int main() {
     // Register callback to capture all library logging
-    clog::Logger::setCallback(myLogCallback);
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setCallback(myLogCallback);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     // All CLOG_* calls will now go through your callback
     CLOG_INFO("System", "Library integrated successfully");
@@ -79,7 +79,7 @@ git submodule update --init --recursive
 ```cmake
 # Add CLog to your CMakeLists.txt
 add_subdirectory(external/clog)
-target_link_libraries(your_target clog::clog)
+target_link_libraries(your_target clogger::clog)
 ```
 
 ### PlatformIO Integration
@@ -136,12 +136,12 @@ build_flags =
 
 ### Log Levels
 
-- `clog::Level::OFF` - No logging
-- `clog::Level::ERROR` - Error messages only
-- `clog::Level::WARN` - Warnings and errors
-- `clog::Level::INFO` - Informational messages and above
-- `clog::Level::DEBUG` - Debug messages and above
-- `clog::Level::TRACE` - All messages including trace
+- `clogger::Level::OFF` - No logging
+- `clogger::Level::ERROR` - Error messages only
+- `clogger::Level::WARN` - Warnings and errors
+- `clogger::Level::INFO` - Informational messages and above
+- `clogger::Level::DEBUG` - Debug messages and above
+- `clogger::Level::TRACE` - All messages including trace
 
 ### Logging Macros
 
@@ -157,19 +157,19 @@ CLOG_TRACE(tag, format, ...)   // Trace level
 
 ```cpp
 // Set global log level
-clog::Logger::setLevel(clog::Level::DEBUG);
+clogger::Logger::setLevel(clogger::Level::DEBUG);
 
 // Get current log level
-clog::Level level = clog::Logger::getLevel();
+clogger::Level level = clogger::Logger::getLevel();
 
 // Set callback for message handling
-clog::Logger::setCallback(myCallback);
+clogger::Logger::setCallback(myCallback);
 
 // Enable/disable direct output
-clog::Logger::enableDirectOutput(true);
+clogger::Logger::enableDirectOutput(true);
 
 // Platform-specific initialization (usually not needed)
-clog::Logger::init();
+clogger::Logger::init();
 ```
 
 ### Tag Filtering
@@ -180,22 +180,22 @@ CLog supports granular filtering by tag names, allowing you to focus on specific
 
 ```cpp
 // Enable specific tags (switches to whitelist mode)
-clog::Logger::enableTag("Database");
-clog::Logger::enableTag("Network");
+clogger::Logger::enableTag("Database");
+clogger::Logger::enableTag("Network");
 
 // Disable specific tags (switches to blacklist mode)
-clog::Logger::disableTag("Debug");
-clog::Logger::disableTag("Verbose");
+clogger::Logger::disableTag("Debug");
+clogger::Logger::disableTag("Verbose");
 
 // Bulk operations
-clog::Logger::enableAllTags();   // Allow all tags (default)
-clog::Logger::disableAllTags();  // Block all tags (empty whitelist)
+clogger::Logger::enableAllTags();   // Allow all tags (default)
+clogger::Logger::disableAllTags();  // Block all tags (empty whitelist)
 
 // Query tag status
-bool isEnabled = clog::Logger::isTagEnabled("MyTag");
+bool isEnabled = clogger::Logger::isTagEnabled("MyTag");
 
 // Clear all filters
-clog::Logger::clearTagFilters();
+clogger::Logger::clearTagFilters();
 ```
 
 #### Tag Filtering Modes
@@ -210,25 +210,25 @@ clog::Logger::clearTagFilters();
 #include <clog/log.hpp>
 
 int main() {
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     // Example 1: Whitelist mode - only show Database and Security logs
-    clog::Logger::enableTag("Database");
-    clog::Logger::enableTag("Security");
+    clogger::Logger::enableTag("Database");
+    clogger::Logger::enableTag("Security");
     
     CLOG_INFO("Database", "Connection established");    // ✓ Shown
     CLOG_INFO("Network", "Packet received");           // ✗ Filtered out
     CLOG_INFO("Security", "User authenticated");       // ✓ Shown
     
     // Example 2: Blacklist mode - show all except Debug logs
-    clog::Logger::enableAllTags();
-    clog::Logger::disableTag("Debug");
+    clogger::Logger::enableAllTags();
+    clogger::Logger::disableTag("Debug");
     
     CLOG_INFO("App", "Application started");           // ✓ Shown
     CLOG_INFO("Debug", "Verbose debug info");          // ✗ Filtered out
     
     // Example 3: Check tag status programmatically
-    if (clog::Logger::isTagEnabled("Performance")) {
+    if (clogger::Logger::isTagEnabled("Performance")) {
         CLOG_INFO("Performance", "CPU usage: 45%");
     }
     
@@ -264,15 +264,15 @@ enum class Color {
 
 ```cpp
 // Set a custom color for a specific tag
-clog::Logger::setTagColor("Database", clog::Color::BRIGHT_CYAN);
-clog::Logger::setTagColor("Network", clog::Color::BRIGHT_MAGENTA);
-clog::Logger::setTagColor("Security", clog::Color::BRIGHT_RED);
+clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
+clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
+clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
 
 // Remove custom color from a tag (returns to default)
-clog::Logger::clearTagColor("Database");
+clogger::Logger::clearTagColor("Database");
 
 // Clear all tag colors
-clog::Logger::clearAllTagColors();
+clogger::Logger::clearAllTagColors();
 ```
 
 #### Tag Color Usage Example
@@ -282,10 +282,10 @@ clog::Logger::clearAllTagColors();
 
 int main() {
     // Configure colors for different system components
-    clog::Logger::setTagColor("Database", clog::Color::BRIGHT_CYAN);
-    clog::Logger::setTagColor("Network", clog::Color::BRIGHT_MAGENTA);
-    clog::Logger::setTagColor("Security", clog::Color::BRIGHT_RED);
-    clog::Logger::setTagColor("UI", clog::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
+    clogger::Logger::setTagColor("UI", clogger::Color::BRIGHT_GREEN);
     
     // Now these tags will appear in their configured colors
     CLOG_INFO("Database", "Connection established");

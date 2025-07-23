@@ -73,22 +73,22 @@ CLog supports granular filtering by tag names in addition to log levels, allowin
 
 ```cpp
 // Enable specific tags (switches to whitelist mode)
-clog::Logger::enableTag("Database");
-clog::Logger::enableTag("Network");
+clogger::Logger::enableTag("Database");
+clogger::Logger::enableTag("Network");
 
 // Disable specific tags (switches to blacklist mode)
-clog::Logger::disableTag("Debug");
-clog::Logger::disableTag("Verbose");
+clogger::Logger::disableTag("Debug");
+clogger::Logger::disableTag("Verbose");
 
 // Bulk operations
-clog::Logger::enableAllTags();   // Allow all tags (default)
-clog::Logger::disableAllTags();  // Block all tags (empty whitelist)
+clogger::Logger::enableAllTags();   // Allow all tags (default)
+clogger::Logger::disableAllTags();  // Block all tags (empty whitelist)
 
 // Query tag status
-bool isEnabled = clog::Logger::isTagEnabled("MyTag");
+bool isEnabled = clogger::Logger::isTagEnabled("MyTag");
 
 // Clear all filters
-clog::Logger::clearTagFilters();
+clogger::Logger::clearTagFilters();
 ```
 
 #### Integration with Log Levels
@@ -110,39 +110,39 @@ Tag filtering works in combination with log level filtering:
 **Standalone logging:**
 ```cpp
 #include <clog/log.hpp>
-clog::Logger::setLevel(clog::Level::DEBUG);
+clogger::Logger::setLevel(clogger::Level::DEBUG);
 CLOG_INFO("MyApp", "Application started");
 ```
 
 **Callback integration for parent applications:**
 ```cpp
-void logCallback(clog::Level level, const char* tag, const char* message) {
+void logCallback(clogger::Level level, const char* tag, const char* message) {
     // Route to existing logging system
 }
-clog::Logger::setCallback(logCallback);
+clogger::Logger::setCallback(logCallback);
 ```
 
 **Tag-based filtering for granular control:**
 ```cpp
 // Enable only specific tags (whitelist mode)
-clog::Logger::enableTag("Database");
-clog::Logger::enableTag("Network");
+clogger::Logger::enableTag("Database");
+clogger::Logger::enableTag("Network");
 CLOG_INFO("Database", "Will appear");    // ✓ Logged
 CLOG_INFO("UI", "Will be filtered");     // ✗ Filtered out
 
 // Disable specific tags (blacklist mode)  
-clog::Logger::enableAllTags();
-clog::Logger::disableTag("Debug");
+clogger::Logger::enableAllTags();
+clogger::Logger::disableTag("Debug");
 CLOG_INFO("App", "Will appear");         // ✓ Logged
 CLOG_INFO("Debug", "Will be filtered");  // ✗ Filtered out
 
 // Check tag status programmatically
-bool enabled = clog::Logger::isTagEnabled("Database");
+bool enabled = clogger::Logger::isTagEnabled("Database");
 ```
 
 ### Build Integration
 
-- **CMake**: Uses `CMakeLists.txt` with interface library target `clog::clog`
+- **CMake**: Uses `CMakeLists.txt` with interface library target `clogger::clog`
 - **PlatformIO**: Uses `library.json` for embedded platforms  
 - **Arduino IDE**: Header-only, just include `<clog/log.hpp>`
 - **Just**: Uses `justfile` for development commands

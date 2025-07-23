@@ -22,8 +22,8 @@ void setup() {
     Serial.begin(115200);
     
     // Initialize CLog with callback for structured logging
-    clog::Logger::setCallback(esp32LogCallback);
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setCallback(esp32LogCallback);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     
     CLOG_INFO("System", "ESP32 CLog Advanced Example starting...");
     CLOG_DEBUG("System", "Free heap: %d bytes", ESP.getFreeHeap());
@@ -49,7 +49,7 @@ void loop() {
 }
 
 // Custom log callback for ESP32
-void esp32LogCallback(clog::Level level, const char* tag, const char* message) {
+void esp32LogCallback(clogger::Level level, const char* tag, const char* message) {
     // Add timestamp and task info
     unsigned long timestamp = millis();
     const char* taskName = pcTaskGetTaskName(NULL);
@@ -58,23 +58,23 @@ void esp32LogCallback(clog::Level level, const char* tag, const char* message) {
     const char* color = "";
     
     switch (level) {
-        case clog::Level::ERROR: 
+        case clogger::Level::ERROR: 
             levelStr = "ERROR"; 
             color = "\033[91m";  // Red
             break;
-        case clog::Level::WARN:  
+        case clogger::Level::WARN:  
             levelStr = "WARN "; 
             color = "\033[93m";  // Yellow
             break;
-        case clog::Level::INFO:  
+        case clogger::Level::INFO:  
             levelStr = "INFO "; 
             color = "\033[92m";  // Green
             break;
-        case clog::Level::DEBUG: 
+        case clogger::Level::DEBUG: 
             levelStr = "DEBUG"; 
             color = "\033[94m";  // Blue
             break;
-        case clog::Level::TRACE: 
+        case clogger::Level::TRACE: 
             levelStr = "TRACE"; 
             color = "\033[90m";  // Gray
             break;

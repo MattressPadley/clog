@@ -8,7 +8,7 @@ A lightweight, header-only C++ logging library for embedded and desktop platform
 #include <clog/log.hpp>
 
 int main() {
-    clog::Logger::setLevel(clog::Level::DEBUG);
+    clogger::Logger::setLevel(clogger::Level::DEBUG);
     CLOG_INFO("MyApp", "Hello, CLog!");
     return 0;
 }
