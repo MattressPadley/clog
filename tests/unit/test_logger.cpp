@@ -328,12 +328,244 @@ void test_configuration() {
     TestFramework::assert_true(clog::config::BUFFER_SIZE > 0, "Buffer size configured");
     TestFramework::assert_true(clog::config::DEFAULT_LEVEL >= 0, "Default level configured");
     TestFramework::assert_true(clog::config::MAX_TAG_LENGTH > 0, "Max tag length configured");
+    TestFramework::assert_true(clog::config::MAX_TAG_FILTERS > 0, "Max tag filters configured");
     
     // Test configuration values are reasonable
     TestFramework::assert_true(clog::config::BUFFER_SIZE >= 64, "Buffer size minimum");
     TestFramework::assert_true(clog::config::BUFFER_SIZE <= 4096, "Buffer size maximum");
     TestFramework::assert_true(clog::config::MAX_TAG_LENGTH >= 4, "Tag length minimum");
+    TestFramework::assert_true(clog::config::MAX_TAG_FILTERS >= 1, "Tag filters minimum");
 }
+
+#if CLOG_ENABLE_TAG_FILTERING
+void test_tag_filtering_basic() {
+    std::cout << "\n--- Testing Basic Tag Filtering ---" << std::endl;
+    
+    LogCapture capture;
+    clog::Logger::setLevel(clog::Level::TRACE);
+    
+    // Start with clean state - all tags should be enabled by default
+    clog::Logger::enableAllTags();
+    TestFramework::assert_true(clog::Logger::isTagEnabled("TestTag"), "Tag enabled by default");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("AnotherTag"), "Another tag enabled by default");
+    
+    // Test basic logging with all tags enabled
+    CLOG_INFO("TestTag", "Message 1");
+    CLOG_INFO("AnotherTag", "Message 2");
+    TestFramework::assert_true(capture.count() == 2, "All messages logged when all tags enabled");
+    
+    capture.clear();
+    
+    // Test enabling specific tag (switches to whitelist mode)
+    clog::Logger::enableTag("TestTag");
+    
+    CLOG_INFO("TestTag", "Should appear");
+    CLOG_INFO("AnotherTag", "Should not appear");
+    CLOG_INFO("ThirdTag", "Should not appear");
+    
+    TestFramework::assert_true(capture.count() == 1, "Only enabled tag messages logged");
+    TestFramework::assert_equal("Should appear", capture.getLog(0).message, "Correct message logged");
+    
+    // Test tag status checking
+    TestFramework::assert_true(clog::Logger::isTagEnabled("TestTag"), "Enabled tag returns true");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("AnotherTag"), "Disabled tag returns false");
+    
+    capture.clear();
+    
+    // Test enabling another tag
+    clog::Logger::enableTag("AnotherTag");
+    
+    CLOG_INFO("TestTag", "Message 1");
+    CLOG_INFO("AnotherTag", "Message 2");  
+    CLOG_INFO("ThirdTag", "Should not appear");
+    
+    TestFramework::assert_true(capture.count() == 2, "Both enabled tags logged");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("TestTag"), "First tag still enabled");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("AnotherTag"), "Second tag enabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("ThirdTag"), "Third tag disabled");
+}
+
+void test_tag_filtering_disable() {
+    std::cout << "\n--- Testing Tag Disabling ---" << std::endl;
+    
+    LogCapture capture;
+    clog::Logger::setLevel(clog::Level::TRACE);
+    
+    // Start with all tags enabled
+    clog::Logger::enableAllTags();
+    
+    // Test disabling specific tag (switches to blacklist mode)
+    clog::Logger::disableTag("BadTag");
+    
+    CLOG_INFO("GoodTag", "Should appear");
+    CLOG_INFO("BadTag", "Should not appear");
+    CLOG_INFO("AnotherGoodTag", "Should appear");
+    
+    TestFramework::assert_true(capture.count() == 2, "All except disabled tag logged");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("GoodTag"), "Good tag enabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("BadTag"), "Bad tag disabled");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("AnotherGoodTag"), "Another good tag enabled");
+    
+    capture.clear();
+    
+    // Test disabling another tag
+    clog::Logger::disableTag("AnotherBadTag");
+    
+    CLOG_INFO("GoodTag", "Should appear");
+    CLOG_INFO("BadTag", "Should not appear");
+    CLOG_INFO("AnotherBadTag", "Should not appear");
+    CLOG_INFO("ThirdGoodTag", "Should appear");
+    
+    TestFramework::assert_true(capture.count() == 2, "Multiple disabled tags work");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("BadTag"), "First bad tag disabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("AnotherBadTag"), "Second bad tag disabled");
+}
+
+void test_tag_filtering_modes() {
+    std::cout << "\n--- Testing Tag Filtering Modes ---" << std::endl;
+    
+    LogCapture capture;
+    clog::Logger::setLevel(clog::Level::TRACE);
+    
+    // Test disableAllTags (whitelist mode with empty list)
+    clog::Logger::disableAllTags();
+    
+    CLOG_INFO("Tag1", "Should not appear");
+    CLOG_INFO("Tag2", "Should not appear");
+    
+    TestFramework::assert_true(capture.count() == 0, "No tags logged when all disabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("Tag1"), "Tag1 disabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("Tag2"), "Tag2 disabled");
+    
+    capture.clear();
+    
+    // Enable one tag
+    clog::Logger::enableTag("Tag1");
+    
+    CLOG_INFO("Tag1", "Should appear");
+    CLOG_INFO("Tag2", "Should not appear");
+    
+    TestFramework::assert_true(capture.count() == 1, "Only enabled tag after disableAllTags");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("Tag1"), "Tag1 enabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("Tag2"), "Tag2 still disabled");
+    
+    capture.clear();
+    
+    // Test enableAllTags
+    clog::Logger::enableAllTags();
+    
+    CLOG_INFO("Tag1", "Should appear");
+    CLOG_INFO("Tag2", "Should appear");
+    CLOG_INFO("Tag3", "Should appear");
+    
+    TestFramework::assert_true(capture.count() == 3, "All tags enabled after enableAllTags");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("Tag1"), "Tag1 enabled after enableAllTags");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("Tag2"), "Tag2 enabled after enableAllTags");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("Tag3"), "Tag3 enabled after enableAllTags");
+}
+
+void test_tag_filtering_with_levels() {
+    std::cout << "\n--- Testing Tag Filtering with Log Levels ---" << std::endl;
+    
+    LogCapture capture;
+    
+    // Enable only specific tags
+    clog::Logger::disableAllTags();
+    clog::Logger::enableTag("AllowedTag");
+    
+    // Set level to INFO
+    clog::Logger::setLevel(clog::Level::INFO);
+    
+    // Test that both level and tag filtering work together
+    CLOG_ERROR("AllowedTag", "Error on allowed tag");      // Should appear (ERROR <= INFO, tag allowed)
+    CLOG_INFO("AllowedTag", "Info on allowed tag");        // Should appear (INFO <= INFO, tag allowed)
+    CLOG_DEBUG("AllowedTag", "Debug on allowed tag");      // Should not appear (DEBUG > INFO)
+    CLOG_ERROR("DisallowedTag", "Error on disallowed tag"); // Should not appear (tag not allowed)
+    CLOG_INFO("DisallowedTag", "Info on disallowed tag");   // Should not appear (tag not allowed)
+    
+    TestFramework::assert_true(capture.count() == 2, "Level and tag filtering combined");
+    
+    auto logs = capture.getLogs();
+    TestFramework::assert_true(logs[0].level == clog::Level::ERROR, "First log is ERROR");
+    TestFramework::assert_true(logs[1].level == clog::Level::INFO, "Second log is INFO");
+    TestFramework::assert_equal("AllowedTag", logs[0].tag, "First log has correct tag");
+    TestFramework::assert_equal("AllowedTag", logs[1].tag, "Second log has correct tag");
+}
+
+void test_tag_filtering_edge_cases() {
+    std::cout << "\n--- Testing Tag Filtering Edge Cases ---" << std::endl;
+    
+    LogCapture capture;
+    clog::Logger::setLevel(clog::Level::TRACE);
+    
+    // Test empty tag
+    clog::Logger::enableAllTags();
+    CLOG_INFO("", "Empty tag message");
+    TestFramework::assert_true(capture.count() == 1, "Empty tag handled");
+    
+    capture.clear();
+    
+    // Test very long tag (should be truncated)
+    std::string longTag(100, 'A');
+    clog::Logger::enableAllTags();
+    // Don't try to enable the long tag - just test that logging with it works
+    
+    CLOG_INFO(longTag.c_str(), "Long tag message");
+    TestFramework::assert_true(capture.count() == 1, "Long tag handled");
+    
+    capture.clear();
+    
+    // Test enabling/disabling same tag multiple times
+    clog::Logger::enableAllTags();
+    clog::Logger::enableTag("TestTag");
+    clog::Logger::enableTag("TestTag"); // Should not cause issues
+    
+    CLOG_INFO("TestTag", "Should appear");
+    TestFramework::assert_true(capture.count() == 1, "Duplicate enable handled");
+    
+    capture.clear();
+    
+    // Test clearing filters
+    clog::Logger::clearTagFilters();
+    clog::Logger::enableAllTags();
+    
+    CLOG_INFO("Tag1", "Should appear");
+    CLOG_INFO("Tag2", "Should appear");
+    
+    TestFramework::assert_true(capture.count() == 2, "Clear filters works");
+}
+
+void test_tag_filtering_mixed_operations() {
+    std::cout << "\n--- Testing Mixed Tag Operations ---" << std::endl;
+    
+    LogCapture capture;
+    clog::Logger::setLevel(clog::Level::TRACE);
+    
+    // Start with blacklist mode (disable some tags)
+    clog::Logger::enableAllTags();
+    clog::Logger::disableTag("BadTag1");
+    clog::Logger::disableTag("BadTag2");
+    
+    CLOG_INFO("GoodTag", "Should appear");
+    CLOG_INFO("BadTag1", "Should not appear");
+    CLOG_INFO("BadTag2", "Should not appear");
+    
+    TestFramework::assert_true(capture.count() == 1, "Blacklist mode working");
+    
+    capture.clear();
+    
+    // Now enable a previously disabled tag (should remove it from blacklist)
+    clog::Logger::enableTag("BadTag1");
+    
+    CLOG_INFO("GoodTag", "Should appear");
+    CLOG_INFO("BadTag1", "Should now appear");
+    CLOG_INFO("BadTag2", "Should still not appear");
+    
+    TestFramework::assert_true(capture.count() == 2, "Enable removes from blacklist");
+    TestFramework::assert_true(clog::Logger::isTagEnabled("BadTag1"), "Previously disabled tag now enabled");
+    TestFramework::assert_false(clog::Logger::isTagEnabled("BadTag2"), "Other disabled tag still disabled");
+}
+#endif // CLOG_ENABLE_TAG_FILTERING
 
 int main() {
     std::cout << "=== CLog Unit Tests ===" << std::endl;
@@ -347,6 +579,15 @@ int main() {
     test_long_messages();
     test_special_characters();
     test_configuration();
+    
+#if CLOG_ENABLE_TAG_FILTERING
+    test_tag_filtering_basic();
+    test_tag_filtering_disable();
+    test_tag_filtering_modes();
+    test_tag_filtering_with_levels();
+    test_tag_filtering_edge_cases();
+    test_tag_filtering_mixed_operations();
+#endif
     
     return TestFramework::summary();
 }

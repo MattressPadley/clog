@@ -160,6 +160,71 @@ int main() {
     clog::Logger::setCallback(nullptr);
     CLOG_INFO("Main", "Back to direct output");
     
+    std::cout << "\n--- Testing Tag Filtering Feature ---" << std::endl;
+    
+    // Demonstrate tag filtering capabilities
+    std::cout << "Testing new tag filtering functionality..." << std::endl;
+    
+    // Start with all tags enabled (default behavior)
+    clog::Logger::enableAllTags();
+    std::cout << "\n1. All tags enabled (default):" << std::endl;
+    CLOG_INFO("Database", "Connection established");
+    CLOG_INFO("Network", "Socket opened");
+    CLOG_INFO("Security", "User authenticated");
+    
+    // Enable only specific tags (whitelist mode)
+    std::cout << "\n2. Only Database and Security tags enabled:" << std::endl;
+    clog::Logger::enableTag("Database");  // This switches to whitelist mode
+    clog::Logger::enableTag("Security");
+    
+    CLOG_INFO("Database", "Query executed successfully");      // Should appear
+    CLOG_INFO("Network", "Data packet received");              // Should NOT appear
+    CLOG_INFO("Security", "Permission check passed");          // Should appear
+    CLOG_INFO("UI", "Button clicked");                         // Should NOT appear
+    
+    // Disable specific tags (blacklist mode)
+    std::cout << "\n3. All tags except Network and UI enabled:" << std::endl;
+    clog::Logger::enableAllTags();         // Reset to allow all
+    clog::Logger::disableTag("Network");   // This switches to blacklist mode
+    clog::Logger::disableTag("UI");
+    
+    CLOG_INFO("Database", "Transaction committed");            // Should appear
+    CLOG_INFO("Network", "Connection timeout");               // Should NOT appear
+    CLOG_INFO("Security", "Access granted");                  // Should appear
+    CLOG_INFO("UI", "Window resized");                        // Should NOT appear
+    
+    // Disable all tags, then enable specific ones
+    std::cout << "\n4. Start with no tags, then enable Database only:" << std::endl;
+    clog::Logger::disableAllTags();        // Disable everything
+    
+    CLOG_INFO("Database", "Should not appear");
+    CLOG_INFO("Security", "Should not appear");
+    
+    clog::Logger::enableTag("Database");   // Enable just Database
+    CLOG_INFO("Database", "Now Database appears");             // Should appear
+    CLOG_INFO("Security", "Security still hidden");           // Should NOT appear
+    
+    // Check tag status
+    std::cout << "\n5. Checking tag status programmatically:" << std::endl;
+    std::cout << "Database enabled: " << (clog::Logger::isTagEnabled("Database") ? "Yes" : "No") << std::endl;
+    std::cout << "Security enabled: " << (clog::Logger::isTagEnabled("Security") ? "Yes" : "No") << std::endl;
+    std::cout << "Network enabled: " << (clog::Logger::isTagEnabled("Network") ? "Yes" : "No") << std::endl;
+    
+    // Demonstrate tag filtering with different log levels
+    std::cout << "\n6. Tag filtering combined with log levels:" << std::endl;
+    clog::Logger::setLevel(clog::Level::WARN);  // Only ERROR and WARN
+    clog::Logger::enableAllTags();              // Allow all tags
+    clog::Logger::disableTag("Debug");          // But disable Debug tag
+    
+    CLOG_ERROR("System", "Critical error occurred");           // Should appear (ERROR level, tag allowed)
+    CLOG_WARN("System", "Warning message");                    // Should appear (WARN level, tag allowed)
+    CLOG_INFO("System", "Info message");                       // Should NOT appear (INFO > WARN level)
+    CLOG_ERROR("Debug", "Debug error");                        // Should NOT appear (tag disabled)
+    
+    // Reset for next demo
+    clog::Logger::setLevel(clog::Level::INFO);
+    clog::Logger::enableAllTags();
+    
     std::cout << "\n--- Simulating real-world usage ---" << std::endl;
     
     // Simulate a typical application workflow

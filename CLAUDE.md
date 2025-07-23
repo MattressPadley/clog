@@ -47,8 +47,9 @@ CLog is a **header-only C++ logging library** designed for cross-platform compat
 1. **Single Header Design**: Complete implementation in `log.hpp` for easy integration
 2. **Platform Abstraction**: Automatic detection of Arduino, ESP32, RP2040, and desktop platforms
 3. **Callback Integration**: Support for routing logs to parent application logging systems
-4. **Compile-time Filtering**: Log levels can be filtered out at compile time for performance
-5. **Fixed Buffer Sizes**: Uses fixed-size buffers (default 512 bytes) for embedded compatibility
+4. **Dual Filtering System**: Both log level and tag-based filtering for granular control
+5. **Compile-time Filtering**: Log levels can be filtered out at compile time for performance
+6. **Fixed Buffer Sizes**: Uses fixed-size buffers (default 512 bytes) for embedded compatibility
 
 ### Log Levels
 - `OFF` (0) - No logging
@@ -57,6 +58,52 @@ CLog is a **header-only C++ logging library** designed for cross-platform compat
 - `INFO` (3) - Informational messages and above (default)
 - `DEBUG` (4) - Debug messages and above
 - `TRACE` (5) - All messages including trace
+
+### Tag-Based Filtering
+
+CLog supports granular filtering by tag names in addition to log levels, allowing you to focus on specific components or functional areas of your application.
+
+#### Filtering Modes
+
+- **ALLOW_ALL** (default): No tag filtering, all tags are logged
+- **WHITELIST**: Only explicitly enabled tags are logged
+- **BLACKLIST**: All tags are logged except explicitly disabled ones
+
+#### Tag Management API
+
+```cpp
+// Enable specific tags (switches to whitelist mode)
+clog::Logger::enableTag("Database");
+clog::Logger::enableTag("Network");
+
+// Disable specific tags (switches to blacklist mode)
+clog::Logger::disableTag("Debug");
+clog::Logger::disableTag("Verbose");
+
+// Bulk operations
+clog::Logger::enableAllTags();   // Allow all tags (default)
+clog::Logger::disableAllTags();  // Block all tags (empty whitelist)
+
+// Query tag status
+bool isEnabled = clog::Logger::isTagEnabled("MyTag");
+
+// Clear all filters
+clog::Logger::clearTagFilters();
+```
+
+#### Integration with Log Levels
+
+Tag filtering works in combination with log level filtering:
+1. First, the log level is checked (e.g., DEBUG > INFO gets filtered)
+2. Then, if the level passes, the tag filter is checked
+3. Only messages that pass both filters are logged
+
+#### Use Cases
+
+- **Development**: Enable only tags for the feature you're working on
+- **Debugging**: Disable noisy tags while keeping relevant ones
+- **Production**: Whitelist only critical system tags
+- **Component Testing**: Focus on specific subsystem logs
 
 ### Usage Patterns
 
@@ -75,6 +122,24 @@ void logCallback(clog::Level level, const char* tag, const char* message) {
 clog::Logger::setCallback(logCallback);
 ```
 
+**Tag-based filtering for granular control:**
+```cpp
+// Enable only specific tags (whitelist mode)
+clog::Logger::enableTag("Database");
+clog::Logger::enableTag("Network");
+CLOG_INFO("Database", "Will appear");    // ✓ Logged
+CLOG_INFO("UI", "Will be filtered");     // ✗ Filtered out
+
+// Disable specific tags (blacklist mode)  
+clog::Logger::enableAllTags();
+clog::Logger::disableTag("Debug");
+CLOG_INFO("App", "Will appear");         // ✓ Logged
+CLOG_INFO("Debug", "Will be filtered");  // ✗ Filtered out
+
+// Check tag status programmatically
+bool enabled = clog::Logger::isTagEnabled("Database");
+```
+
 ### Build Integration
 
 - **CMake**: Uses `CMakeLists.txt` with interface library target `clog::clog`
@@ -88,6 +153,8 @@ Compile-time configuration via preprocessor defines:
 - `CLOG_LEVEL` - Set maximum log level (0-5)
 - `CLOG_BUFFER_SIZE` - Message buffer size (default: 256 embedded, 512 desktop)
 - `CLOG_ENABLE_COLORS` - Enable color output (default: desktop only)
+- `CLOG_MAX_TAG_FILTERS` - Maximum number of tag filters (default: 16)
+- `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
 
 ### Testing Structure
 

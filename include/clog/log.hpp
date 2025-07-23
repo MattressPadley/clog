@@ -2,6 +2,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include "config.hpp"
 
 // Platform detection
 #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
@@ -68,6 +69,14 @@ public:
     static void clearTagColor(const char* tag);
     static void clearAllTagColors();
     
+    // Tag filtering configuration
+    static void enableTag(const char* tag);
+    static void disableTag(const char* tag);
+    static void enableAllTags();
+    static void disableAllTags();
+    static bool isTagEnabled(const char* tag);
+    static void clearTagFilters();
+    
     // Convenience methods
     static void error(const char* tag, const char* format, ...);
     static void warn(const char* tag, const char* format, ...);
@@ -89,11 +98,33 @@ private:
     };
     static TagColor tagColors[MAX_TAG_COLORS];
     
+    // Tag filtering storage
+#if CLOG_ENABLE_TAG_FILTERING
+    enum class TagFilterMode {
+        ALLOW_ALL,      // Default: allow all tags (no filtering)
+        WHITELIST,      // Only allow explicitly enabled tags
+        BLACKLIST       // Allow all except explicitly disabled tags
+    };
+    
+    struct TagFilter {
+        char tag[32];
+        bool active;
+    };
+    static TagFilter tagFilters[CLOG_MAX_TAG_FILTERS];
+    static TagFilterMode filterMode;
+#endif
+    
     static void output(Level level, const char* tag, const char* message);
     static const char* levelToString(Level level);
     static const char* levelToColor(Level level);
     static const char* colorToAnsi(Color color);
     static Color getTagColor(const char* tag);
+    
+    // Tag filtering helper methods
+#if CLOG_ENABLE_TAG_FILTERING
+    static bool checkTagFilter(const char* tag);
+    static int findTagFilter(const char* tag);
+#endif
 };
 
 } // namespace clog
@@ -140,8 +171,17 @@ Logger::Callback Logger::logCallback = nullptr;
 bool Logger::directOutput = true;
 Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
+#if CLOG_ENABLE_TAG_FILTERING
+Logger::TagFilter Logger::tagFilters[CLOG_MAX_TAG_FILTERS] = {};
+Logger::TagFilterMode Logger::filterMode = Logger::TagFilterMode::ALLOW_ALL;
+#endif
+
 void Logger::log(Level level, const char* tag, const char* format, ...) {
     if (level > currentLevel) return;
+    
+#if CLOG_ENABLE_TAG_FILTERING
+    if (!checkTagFilter(tag)) return;
+#endif
     
     char buffer[512];  // Fixed size for embedded compatibility
     va_list args;
@@ -208,6 +248,9 @@ const char* Logger::levelToColor(Level level) {
 // Convenience method implementations
 void Logger::error(const char* tag, const char* format, ...) {
     if (Level::ERROR > currentLevel) return;
+#if CLOG_ENABLE_TAG_FILTERING
+    if (!checkTagFilter(tag)) return;
+#endif
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -218,6 +261,9 @@ void Logger::error(const char* tag, const char* format, ...) {
 
 void Logger::warn(const char* tag, const char* format, ...) {
     if (Level::WARN > currentLevel) return;
+#if CLOG_ENABLE_TAG_FILTERING
+    if (!checkTagFilter(tag)) return;
+#endif
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -228,6 +274,9 @@ void Logger::warn(const char* tag, const char* format, ...) {
 
 void Logger::info(const char* tag, const char* format, ...) {
     if (Level::INFO > currentLevel) return;
+#if CLOG_ENABLE_TAG_FILTERING
+    if (!checkTagFilter(tag)) return;
+#endif
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -238,6 +287,9 @@ void Logger::info(const char* tag, const char* format, ...) {
 
 void Logger::debug(const char* tag, const char* format, ...) {
     if (Level::DEBUG > currentLevel) return;
+#if CLOG_ENABLE_TAG_FILTERING
+    if (!checkTagFilter(tag)) return;
+#endif
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -248,6 +300,9 @@ void Logger::debug(const char* tag, const char* format, ...) {
 
 void Logger::trace(const char* tag, const char* format, ...) {
     if (Level::TRACE > currentLevel) return;
+#if CLOG_ENABLE_TAG_FILTERING
+    if (!checkTagFilter(tag)) return;
+#endif
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -334,5 +389,114 @@ const char* Logger::colorToAnsi(Color color) {
         default: return "";
     }
 }
+
+#if CLOG_ENABLE_TAG_FILTERING
+// Tag filtering implementation
+bool Logger::checkTagFilter(const char* tag) {
+    if (filterMode == TagFilterMode::ALLOW_ALL) {
+        return true;
+    }
+    
+    int index = findTagFilter(tag);
+    bool tagInFilter = (index >= 0);
+    
+    if (filterMode == TagFilterMode::WHITELIST) {
+        return tagInFilter;  // Only allow tags in the whitelist
+    } else { // BLACKLIST
+        return !tagInFilter; // Allow all except tags in the blacklist
+    }
+}
+
+int Logger::findTagFilter(const char* tag) {
+    for (size_t i = 0; i < CLOG_MAX_TAG_FILTERS; i++) {
+        if (tagFilters[i].active && strcmp(tagFilters[i].tag, tag) == 0) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+void Logger::enableTag(const char* tag) {
+    // If we're in ALLOW_ALL mode, switch to WHITELIST and add this tag
+    if (filterMode == TagFilterMode::ALLOW_ALL) {
+        filterMode = TagFilterMode::WHITELIST;
+    }
+    
+    // If we're in BLACKLIST mode, remove the tag from blacklist
+    if (filterMode == TagFilterMode::BLACKLIST) {
+        int index = findTagFilter(tag);
+        if (index >= 0) {
+            tagFilters[index].active = false;
+        }
+        return;
+    }
+    
+    // WHITELIST mode: add tag to whitelist if not already present
+    if (findTagFilter(tag) >= 0) {
+        return; // Tag already enabled
+    }
+    
+    // Find empty slot
+    for (size_t i = 0; i < CLOG_MAX_TAG_FILTERS; i++) {
+        if (!tagFilters[i].active) {
+            strncpy(tagFilters[i].tag, tag, sizeof(tagFilters[i].tag) - 1);
+            tagFilters[i].tag[sizeof(tagFilters[i].tag) - 1] = '\0';
+            tagFilters[i].active = true;
+            return;
+        }
+    }
+}
+
+void Logger::disableTag(const char* tag) {
+    // If we're in ALLOW_ALL mode, switch to BLACKLIST and add this tag
+    if (filterMode == TagFilterMode::ALLOW_ALL) {
+        filterMode = TagFilterMode::BLACKLIST;
+    }
+    
+    // If we're in WHITELIST mode, remove the tag from whitelist
+    if (filterMode == TagFilterMode::WHITELIST) {
+        int index = findTagFilter(tag);
+        if (index >= 0) {
+            tagFilters[index].active = false;
+        }
+        return;
+    }
+    
+    // BLACKLIST mode: add tag to blacklist if not already present
+    if (findTagFilter(tag) >= 0) {
+        return; // Tag already disabled
+    }
+    
+    // Find empty slot
+    for (size_t i = 0; i < CLOG_MAX_TAG_FILTERS; i++) {
+        if (!tagFilters[i].active) {
+            strncpy(tagFilters[i].tag, tag, sizeof(tagFilters[i].tag) - 1);
+            tagFilters[i].tag[sizeof(tagFilters[i].tag) - 1] = '\0';
+            tagFilters[i].active = true;
+            return;
+        }
+    }
+}
+
+void Logger::enableAllTags() {
+    filterMode = TagFilterMode::ALLOW_ALL;
+    clearTagFilters();
+}
+
+void Logger::disableAllTags() {
+    filterMode = TagFilterMode::WHITELIST;
+    clearTagFilters();
+}
+
+bool Logger::isTagEnabled(const char* tag) {
+    return checkTagFilter(tag);
+}
+
+void Logger::clearTagFilters() {
+    for (size_t i = 0; i < CLOG_MAX_TAG_FILTERS; i++) {
+        tagFilters[i].active = false;
+    }
+}
+#endif // CLOG_ENABLE_TAG_FILTERING
 
 } // namespace clog

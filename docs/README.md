@@ -8,6 +8,7 @@ CLog is a lightweight, header-only C++ logging library designed for cross-platfo
 - **Cross-platform**: Works on Arduino, ESP32, RP2040, and desktop systems
 - **Lightweight**: Minimal overhead suitable for embedded systems
 - **Flexible**: Supports both direct output and callback-based integration
+- **Dual filtering**: Both log level and tag-based filtering for granular control
 - **Configurable**: Compile-time log level filtering and buffer size configuration
 - **Colorized output**: Level-based colors and configurable tag colors for better visual distinction
 - **Zero dependencies**: Only uses standard C++ library features
@@ -103,8 +104,10 @@ build_flags =
 
 ```cpp
 // Define before including clog/log.hpp
-#define CLOG_LEVEL 4        // 0=OFF, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=TRACE
-#define CLOG_BUFFER_SIZE 512 // Message buffer size
+#define CLOG_LEVEL 4              // 0=OFF, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=TRACE
+#define CLOG_BUFFER_SIZE 512      // Message buffer size
+#define CLOG_MAX_TAG_FILTERS 16   // Maximum number of tag filters
+#define CLOG_ENABLE_TAG_FILTERING 1 // Enable tag filtering (default: enabled)
 #include <clog/log.hpp>
 ```
 
@@ -115,6 +118,8 @@ build_flags =
 target_compile_definitions(your_target PRIVATE 
     CLOG_LEVEL=4
     CLOG_BUFFER_SIZE=256
+    CLOG_MAX_TAG_FILTERS=16
+    CLOG_ENABLE_TAG_FILTERING=1
 )
 ```
 
@@ -123,6 +128,8 @@ target_compile_definitions(your_target PRIVATE
 build_flags = 
     -DCLOG_LEVEL=4
     -DCLOG_BUFFER_SIZE=256
+    -DCLOG_MAX_TAG_FILTERS=16
+    -DCLOG_ENABLE_TAG_FILTERING=1
 ```
 
 ## API Reference
@@ -164,6 +171,79 @@ clog::Logger::enableDirectOutput(true);
 // Platform-specific initialization (usually not needed)
 clog::Logger::init();
 ```
+
+### Tag Filtering
+
+CLog supports granular filtering by tag names, allowing you to focus on specific components or functional areas of your application. This works in combination with log level filtering.
+
+#### Tag Management Methods
+
+```cpp
+// Enable specific tags (switches to whitelist mode)
+clog::Logger::enableTag("Database");
+clog::Logger::enableTag("Network");
+
+// Disable specific tags (switches to blacklist mode)
+clog::Logger::disableTag("Debug");
+clog::Logger::disableTag("Verbose");
+
+// Bulk operations
+clog::Logger::enableAllTags();   // Allow all tags (default)
+clog::Logger::disableAllTags();  // Block all tags (empty whitelist)
+
+// Query tag status
+bool isEnabled = clog::Logger::isTagEnabled("MyTag");
+
+// Clear all filters
+clog::Logger::clearTagFilters();
+```
+
+#### Tag Filtering Modes
+
+- **ALLOW_ALL** (default): No tag filtering, all tags are logged
+- **WHITELIST**: Only explicitly enabled tags are logged
+- **BLACKLIST**: All tags are logged except explicitly disabled ones
+
+#### Example Usage
+
+```cpp
+#include <clog/log.hpp>
+
+int main() {
+    clog::Logger::setLevel(clog::Level::DEBUG);
+    
+    // Example 1: Whitelist mode - only show Database and Security logs
+    clog::Logger::enableTag("Database");
+    clog::Logger::enableTag("Security");
+    
+    CLOG_INFO("Database", "Connection established");    // ✓ Shown
+    CLOG_INFO("Network", "Packet received");           // ✗ Filtered out
+    CLOG_INFO("Security", "User authenticated");       // ✓ Shown
+    
+    // Example 2: Blacklist mode - show all except Debug logs
+    clog::Logger::enableAllTags();
+    clog::Logger::disableTag("Debug");
+    
+    CLOG_INFO("App", "Application started");           // ✓ Shown
+    CLOG_INFO("Debug", "Verbose debug info");          // ✗ Filtered out
+    
+    // Example 3: Check tag status programmatically
+    if (clog::Logger::isTagEnabled("Performance")) {
+        CLOG_INFO("Performance", "CPU usage: 45%");
+    }
+    
+    return 0;
+}
+```
+
+#### Integration with Log Levels
+
+Tag filtering and log level filtering work together:
+1. First, the log level is checked (e.g., DEBUG > INFO gets filtered)
+2. Then, if the level passes, the tag filter is checked
+3. Only messages that pass both filters are logged
+
+This allows for fine-grained control: you can set a high log level (like DEBUG) but only enable specific tags you're interested in.
 
 ### Tag Color Configuration
 
@@ -242,7 +322,7 @@ The colored output format is: `[<colored_level>] <colored_tag>: message`
 
 The library includes comprehensive examples:
 
-- **Desktop Example**: Basic usage with colored console output and tag color configuration showcase
+- **Desktop Example**: Basic usage with colored console output, tag color configuration, and tag filtering demonstration
 - **Arduino Example**: Embedded system logging with sensor simulation
 - **ESP32 Advanced**: Multi-task logging with WiFi and web server integration
 - **Callback Integration**: Advanced integration with parent application logging systems
@@ -250,7 +330,7 @@ The library includes comprehensive examples:
 ### Running Examples
 
 ```bash
-# Run desktop example with tag color showcase
+# Run desktop example with tag color and filtering showcase
 just run-desktop-example
 
 # Build and run other examples
