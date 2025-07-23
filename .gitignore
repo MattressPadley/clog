@@ -2,6 +2,7 @@
 build/
 builds/
 .build/
+build-pico/
 
 # CMake generated files
 CMakeCache.txt
@@ -18,10 +19,13 @@ Testing/
 .piolibdeps/
 lib_deps/
 
-# Arduino IDE
+# Arduino IDE & Pico SDK artifacts
 *.hex
 *.elf
 *.map
+*.uf2
+*.bin
+*.dis
 
 # Visual Studio Code
 .vscode/

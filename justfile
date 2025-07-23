@@ -22,6 +22,7 @@ build-examples:
 # Clean build artifacts
 clean:
     rm -rf build/
+    rm -rf build-pico/
     rm -rf examples/desktop/build/
     rm -f test_output.log
 
@@ -63,6 +64,34 @@ run-desktop-example: build-examples
 # Compile and run callback example  
 run-callback-example: build-examples
     cd build && find . -name "*callback*" -executable -exec {} \;
+
+# Pico Example Commands
+# =====================
+
+# Build Pico example (requires PICO_SDK_PATH)
+build-pico-example:
+    @echo "Building Pico example..."
+    mkdir -p build-pico
+    cd build-pico && cmake ../examples/pico && make
+
+# Upload Pico example firmware using picotool
+upload-pico-example: build-pico-example
+    @echo "Uploading firmware to Pico..."
+    @echo "Make sure Pico is in BOOTSEL mode (hold BOOTSEL while connecting USB)"
+    picotool load build-pico/pico_example.uf2 --force
+
+# Monitor Pico serial output using PlatformIO
+monitor-pico-example:
+    @echo "Monitoring Pico serial output..."
+    @echo "Press Ctrl+C to exit monitoring"
+    pio device monitor --port /dev/cu.usbmodem* --baud 115200
+
+# Complete Pico test: build, upload, and monitor
+test-pico: build-pico-example upload-pico-example
+    @echo "Firmware uploaded. Starting monitor in 3 seconds..."
+    @echo "Press the RESET button on your Pico to restart the program"
+    sleep 3
+    just monitor-pico-example
 
 # Development Commands
 # ====================

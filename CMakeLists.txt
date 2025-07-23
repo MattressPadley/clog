@@ -36,6 +36,17 @@ endif()
 # Build examples
 if(CLOG_BUILD_EXAMPLES)
     add_subdirectory(examples/desktop)
+    
+    # Only build Pico example if Pico SDK is available
+    if(DEFINED ENV{PICO_SDK_PATH} OR PICO_SDK_FETCH_FROM_GIT)
+        option(CLOG_BUILD_PICO_EXAMPLE "Build CLog Pico example" ON)
+        if(CLOG_BUILD_PICO_EXAMPLE)
+            message(STATUS "Pico SDK detected, building Pico example")
+            add_subdirectory(examples/pico)
+        endif()
+    else()
+        message(STATUS "Pico SDK not found, skipping Pico example")
+    endif()
 endif()
 
 # Build tests
