@@ -160,6 +160,7 @@ const char* Logger::levelToColor(Level level) {
 
 // Convenience method implementations
 void Logger::error(const char* tag, const char* format, ...) {
+    if (Level::ERROR > currentLevel) return;
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -169,6 +170,7 @@ void Logger::error(const char* tag, const char* format, ...) {
 }
 
 void Logger::warn(const char* tag, const char* format, ...) {
+    if (Level::WARN > currentLevel) return;
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -178,6 +180,7 @@ void Logger::warn(const char* tag, const char* format, ...) {
 }
 
 void Logger::info(const char* tag, const char* format, ...) {
+    if (Level::INFO > currentLevel) return;
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -187,6 +190,7 @@ void Logger::info(const char* tag, const char* format, ...) {
 }
 
 void Logger::debug(const char* tag, const char* format, ...) {
+    if (Level::DEBUG > currentLevel) return;
     va_list args;
     va_start(args, format);
     char buffer[512];
@@ -196,6 +200,7 @@ void Logger::debug(const char* tag, const char* format, ...) {
 }
 
 void Logger::trace(const char* tag, const char* format, ...) {
+    if (Level::TRACE > currentLevel) return;
     va_list args;
     va_start(args, format);
     char buffer[512];
