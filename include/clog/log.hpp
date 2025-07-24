@@ -71,7 +71,7 @@ public:
     static Level getLevel();
     
     // Callback integration for parent applications
-    using Callback = void(*)(Level level, const char* tag, const char* message);
+    using Callback = void(*)(Level level, const char* tag, const char* message, const char* libraryName);
     static void setCallback(Callback callback);
     static void enableDirectOutput(bool enabled = true);
     
@@ -95,9 +95,7 @@ public:
     static void clearTagColor(const char* tag);
     static void clearAllTagColors();
     
-    // Library identification and control
-    static void setLibraryName(const char* name);
-    static const char* getLibraryName();
+    // Library identification and control (compile-time only)
     static void enableLibraryTags(bool enabled = true);
     static bool isLibraryTagsEnabled();
     
@@ -114,14 +112,7 @@ public:
     static bool isTagEnabled(const char* tag);
     static void clearTagFilters();
     
-    // Convenience methods
-    static void error(const char* tag, const char* format, ...);
-    static void warn(const char* tag, const char* format, ...);
-    static void info(const char* tag, const char* format, ...);
-    static void debug(const char* tag, const char* format, ...);
-    static void trace(const char* tag, const char* format, ...);
-    
-    // Library-aware convenience methods
+    // Library-aware convenience methods (compile-time library identification)
     static void error_with_library(const char* tag, const char* libraryName, const char* format, ...);
     static void warn_with_library(const char* tag, const char* libraryName, const char* format, ...);
     static void info_with_library(const char* tag, const char* libraryName, const char* format, ...);
@@ -146,7 +137,6 @@ private:
     static TagColor tagColors[MAX_TAG_COLORS];
     
     // Library context storage
-    static thread_local char libraryName[config::MAX_LIBRARY_NAME_LENGTH + 1];
     static bool libraryTagsEnabled;
     
     // Library color storage
@@ -174,7 +164,6 @@ private:
     static TagFilterMode filterMode;
 #endif
     
-    static void output(Level level, const char* tag, const char* message);
     static void output(Level level, const char* tag, const char* message, const char* libraryName);
     static const char* levelToString(Level level);
     static const char* levelToColor(Level level);
@@ -240,8 +229,6 @@ inline Platform Logger::currentPlatform = Platform::DESKTOP;
 inline Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
 // Library context static members
-// Use thread_local storage to ensure each thread/execution context maintains its own library name
-inline thread_local char Logger::libraryName[config::MAX_LIBRARY_NAME_LENGTH + 1] = "";
 inline bool Logger::libraryTagsEnabled = false;
 inline Logger::LibraryColor Logger::libraryColors[MAX_LIBRARY_COLORS] = {};
 
@@ -263,69 +250,12 @@ inline void Logger::log(Level level, const char* tag, const char* format, ...) {
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     
-    output(level, tag, buffer);
-}
-
-inline void Logger::output(Level level, const char* tag, const char* message) {
-    if (logCallback) {
-        logCallback(level, tag, message);
-    } else if (directOutput) {
-        const char* levelStr = levelToString(level);
-        
-        if (isArduinoPlatform()) {
-            // Arduino platform: use Serial.printf
-            #ifdef ARDUINO
-            Serial.printf("[%s] ", levelStr);
-            if (libraryTagsEnabled && libraryName[0] != '\0') {
-                Serial.printf("[%s]", libraryName);
-            }
-            Serial.printf("[%s]: %s\n", tag, message);
-            #endif
-        } else if (isDesktopPlatform()) {
-            // Desktop platform: use std::cout with colors
-            #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
-            const char* levelColor = levelToColor(level);
-            Color tagColor = getTagColor(tag);
-            const char* tagColorCode = colorToAnsi(tagColor);
-            
-            std::cout << "[" << levelColor << levelStr << "\033[0m" << "] ";
-            
-            // Library tag if enabled and set
-            if (libraryTagsEnabled && libraryName[0] != '\0') {
-                Color libraryColor = getLibraryColor(libraryName);
-                const char* libraryColorCode = colorToAnsi(libraryColor);
-                std::cout << "[";
-                if (libraryColor != Color::DEFAULT) {
-                    std::cout << libraryColorCode << libraryName << "\033[0m";
-                } else {
-                    std::cout << libraryName;
-                }
-                std::cout << "]";
-            }
-            
-            // Regular tag (always in brackets now)
-            std::cout << "[";
-            if (tagColor != Color::DEFAULT) {
-                std::cout << tagColorCode << tag << "\033[0m";
-            } else {
-                std::cout << tag;
-            }
-            std::cout << "]: " << message << std::endl;
-            #endif
-        } else {
-            // Fallback: use printf
-            printf("[%s] ", levelStr);
-            if (libraryTagsEnabled && libraryName[0] != '\0') {
-                printf("[%s]", libraryName);
-            }
-            printf("[%s]: %s\n", tag, message);
-        }
-    }
+    output(level, tag, buffer, nullptr);
 }
 
 inline void Logger::output(Level level, const char* tag, const char* message, const char* libraryName) {
     if (logCallback) {
-        logCallback(level, tag, message);
+        logCallback(level, tag, message, libraryName);
     } else if (directOutput) {
         const char* levelStr = levelToString(level);
         
@@ -408,74 +338,7 @@ inline const char* Logger::levelToColor(Level level) {
 }
 
 // Convenience method implementations
-inline void Logger::error(const char* tag, const char* format, ...) {
-    if (Level::ERROR > currentLevel) return;
-#if CLOG_ENABLE_TAG_FILTERING
-    if (!checkTagFilter(tag)) return;
-#endif
-    va_list args;
-    va_start(args, format);
-    char buffer[512];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    output(Level::ERROR, tag, buffer);
-}
-
-inline void Logger::warn(const char* tag, const char* format, ...) {
-    if (Level::WARN > currentLevel) return;
-#if CLOG_ENABLE_TAG_FILTERING
-    if (!checkTagFilter(tag)) return;
-#endif
-    va_list args;
-    va_start(args, format);
-    char buffer[512];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    output(Level::WARN, tag, buffer);
-}
-
-inline void Logger::info(const char* tag, const char* format, ...) {
-    if (Level::INFO > currentLevel) return;
-#if CLOG_ENABLE_TAG_FILTERING
-    if (!checkTagFilter(tag)) return;
-#endif
-    va_list args;
-    va_start(args, format);
-    char buffer[512];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    // Capture the library name at call time to preserve context
-    const char* currentLibName = (libraryName[0] != '\0') ? libraryName : nullptr;
-    output(Level::INFO, tag, buffer, currentLibName);
-}
-
-inline void Logger::debug(const char* tag, const char* format, ...) {
-    if (Level::DEBUG > currentLevel) return;
-#if CLOG_ENABLE_TAG_FILTERING
-    if (!checkTagFilter(tag)) return;
-#endif
-    va_list args;
-    va_start(args, format);
-    char buffer[512];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    output(Level::DEBUG, tag, buffer);
-}
-
-inline void Logger::trace(const char* tag, const char* format, ...)  {
-    if (Level::TRACE > currentLevel) return;
-#if CLOG_ENABLE_TAG_FILTERING
-    if (!checkTagFilter(tag)) return;
-#endif
-    va_list args;
-    va_start(args, format);
-    char buffer[512];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    output(Level::TRACE, tag, buffer);
-}
-
-// Library-aware convenience methods
+// Library-aware convenience methods (pure compile-time library identification)
 inline void Logger::error_with_library(const char* tag, const char* libraryName, const char* format, ...) {
     if (Level::ERROR > currentLevel) return;
 #if CLOG_ENABLE_TAG_FILTERING
@@ -823,19 +686,6 @@ inline void Logger::clearTagFilters() {
 #endif // CLOG_ENABLE_TAG_FILTERING
 
 // Library identification and control
-inline void Logger::setLibraryName(const char* name) {
-    if (name && strlen(name) > 0) {
-        strncpy(libraryName, name, sizeof(libraryName) - 1);
-        libraryName[sizeof(libraryName) - 1] = '\0';
-    } else {
-        libraryName[0] = '\0';
-    }
-}
-
-inline const char* Logger::getLibraryName() {
-    return libraryName;
-}
-
 inline void Logger::enableLibraryTags(bool enabled) {
     libraryTagsEnabled = enabled;
 }

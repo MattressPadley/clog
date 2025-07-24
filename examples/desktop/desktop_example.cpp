@@ -1,3 +1,6 @@
+// Define library name for compile-time identification
+#define CLOG_LIBRARY_NAME "DesktopExample"
+
 #include <clog/log.hpp>
 #include <clog/config.hpp>
 #include <clog/platform.hpp>
@@ -140,7 +143,7 @@ int main() {
     // Demonstrate callback functionality
     std::cout << "\n--- Testing callback functionality ---" << std::endl;
     
-    clogger::Logger::setCallback([](clogger::Level level, const char* tag, const char* message) {
+    clogger::Logger::setCallback([](clogger::Level level, const char* tag, const char* message, const char* libraryName) {
         const char* levelStr = "";
         switch (level) {
             case clogger::Level::ERROR: levelStr = "ERROR"; break;
@@ -150,7 +153,11 @@ int main() {
             case clogger::Level::TRACE: levelStr = "TRACE"; break;
             default: levelStr = "?????"; break;
         }
-        std::cout << "[CALLBACK:" << levelStr << "] " << tag << ": " << message << std::endl;
+        std::cout << "[CALLBACK:" << levelStr << "] ";
+        if (libraryName && libraryName[0] != '\0') {
+            std::cout << "[" << libraryName << "]";
+        }
+        std::cout << tag << ": " << message << std::endl;
     });
     
     CLOG_INFO("Callback", "This message should go through the callback");
@@ -162,12 +169,12 @@ int main() {
     
     std::cout << "\n--- Testing Library Tagging Feature ---" << std::endl;
     
-    // Demonstrate library self-identification and parent control
-    std::cout << "Demonstrating library tagging functionality..." << std::endl;
+    // Demonstrate compile-time library identification
+    std::cout << "Demonstrating compile-time library tagging functionality..." << std::endl;
+    std::cout << "This example uses #define CLOG_LIBRARY_NAME \"DesktopExample\"" << std::endl;
     
-    // Step 1: Library sets its own name
-    std::cout << "\n1. Library identifies itself (library tags disabled by default):" << std::endl;
-    clogger::Logger::setLibraryName("MyLib");
+    // Step 1: Library logs with tags disabled (default)
+    std::cout << "\n1. Library logs with library tags disabled by default:" << std::endl;
     CLOG_INFO("Database", "Connection established");
     CLOG_INFO("Network", "Socket opened");
     
@@ -180,7 +187,7 @@ int main() {
     
     // Step 3: Demonstrate library colors
     std::cout << "\n3. Configure colors for library names:" << std::endl;
-    clogger::Logger::setLibraryColor("MyLib", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setLibraryColor("DesktopExample", clogger::Color::BRIGHT_CYAN);
     clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_GREEN);
     clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
     clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
@@ -189,35 +196,29 @@ int main() {
     CLOG_INFO("Network", "Library: cyan, Tag: magenta");
     CLOG_ERROR("Security", "Library: cyan, Tag: red");
     
-    // Step 4: Multiple libraries scenario
-    std::cout << "\n4. Simulating multiple libraries:" << std::endl;
+    // Step 4: Note about multiple libraries
+    std::cout << "\n4. Multiple libraries scenario:" << std::endl;
+    std::cout << "   In a real multi-library scenario, each library would define" << std::endl;
+    std::cout << "   its own CLOG_LIBRARY_NAME before including <clog/log.hpp>" << std::endl;
+    std::cout << "   This ensures each library maintains its own identity." << std::endl;
     
-    // Simulate first library
-    clogger::Logger::setLibraryName("DatabaseLib");
-    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
-    CLOG_INFO("Connection", "Database connection established");
-    CLOG_DEBUG("Query", "SELECT * FROM users");
-    
-    // Simulate second library  
-    clogger::Logger::setLibraryName("NetworkLib");
-    clogger::Logger::setLibraryColor("NetworkLib", clogger::Color::BRIGHT_YELLOW);
-    CLOG_INFO("HTTP", "Server started on port 8080");
-    CLOG_WARN("TCP", "Connection timeout detected");
+    CLOG_INFO("Connection", "This example library shows DesktopExample");
+    CLOG_INFO("HTTP", "All logs from this file show the same library name");
+    CLOG_WARN("TCP", "Because they're compiled with the same CLOG_LIBRARY_NAME");
     
     // Step 5: Disable library tags (back to regular format)
     std::cout << "\n5. Parent disables library tags (back to regular format):" << std::endl;
     clogger::Logger::enableLibraryTags(false);
-    CLOG_INFO("Database", "Still showing database operations");
-    CLOG_INFO("Network", "Still showing network operations");
+    CLOG_INFO("Database", "Still showing operations");
+    CLOG_INFO("Network", "Still showing operations");
     
     // Step 6: Show library context info
     std::cout << "\n6. Library context information:" << std::endl;
-    std::cout << "Current library name: '" << clogger::Logger::getLibraryName() << "'" << std::endl;
+    std::cout << "Compile-time library name: 'DesktopExample' (embedded in binary)" << std::endl;
     std::cout << "Library tags enabled: " << (clogger::Logger::isLibraryTagsEnabled() ? "Yes" : "No") << std::endl;
     
     // Reset for next demo
     clogger::Logger::enableLibraryTags(true);
-    clogger::Logger::setLibraryName("CLog");
     clogger::Logger::setLibraryColor("CLog", clogger::Color::BRIGHT_WHITE);
     
     std::cout << "\n--- Testing Tag Filtering Feature ---" << std::endl;
