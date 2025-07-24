@@ -69,6 +69,17 @@ public:
     static void clearTagColor(const char* tag);
     static void clearAllTagColors();
     
+    // Library identification and control
+    static void setLibraryName(const char* name);
+    static const char* getLibraryName();
+    static void enableLibraryTags(bool enabled = true);
+    static bool isLibraryTagsEnabled();
+    
+    // Library color configuration
+    static void setLibraryColor(const char* library, Color color);
+    static void clearLibraryColor(const char* library);
+    static void clearAllLibraryColors();
+    
     // Tag filtering configuration
     static void enableTag(const char* tag);
     static void disableTag(const char* tag);
@@ -98,6 +109,19 @@ private:
     };
     static TagColor tagColors[MAX_TAG_COLORS];
     
+    // Library context storage
+    static char libraryName[64];
+    static bool libraryTagsEnabled;
+    
+    // Library color storage
+    static constexpr size_t MAX_LIBRARY_COLORS = 16;
+    struct LibraryColor {
+        char library[32];
+        Color color;
+        bool active;
+    };
+    static LibraryColor libraryColors[MAX_LIBRARY_COLORS];
+    
     // Tag filtering storage
 #if CLOG_ENABLE_TAG_FILTERING
     enum class TagFilterMode {
@@ -119,6 +143,7 @@ private:
     static const char* levelToColor(Level level);
     static const char* colorToAnsi(Color color);
     static Color getTagColor(const char* tag);
+    static Color getLibraryColor(const char* library);
     
     // Tag filtering helper methods
 #if CLOG_ENABLE_TAG_FILTERING
@@ -171,6 +196,11 @@ inline Logger::Callback Logger::logCallback = nullptr;
 inline bool Logger::directOutput = true;
 inline Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
+// Library context static members
+inline char Logger::libraryName[64] = "";
+inline bool Logger::libraryTagsEnabled = false;
+inline Logger::LibraryColor Logger::libraryColors[MAX_LIBRARY_COLORS] = {};
+
 #if CLOG_ENABLE_TAG_FILTERING
 inline Logger::TagFilter Logger::tagFilters[CLOG_MAX_TAG_FILTERS] = {};
 inline Logger::TagFilterMode Logger::filterMode = Logger::TagFilterMode::ALLOW_ALL;
@@ -199,21 +229,45 @@ inline void Logger::output(Level level, const char* tag, const char* message) {
         const char* levelStr = levelToString(level);
         
 #ifdef CLOG_PLATFORM_ARDUINO
-        Serial.printf("[%s] %s: %s\n", levelStr, tag, message);
+        Serial.printf("[%s] ", levelStr);
+        if (libraryTagsEnabled && libraryName[0] != '\0') {
+            Serial.printf("[%s]", libraryName);
+        }
+        Serial.printf("[%s]: %s\n", tag, message);
 #elif defined(CLOG_PLATFORM_DESKTOP)
         const char* levelColor = levelToColor(level);
         Color tagColor = getTagColor(tag);
         const char* tagColorCode = colorToAnsi(tagColor);
         
         std::cout << "[" << levelColor << levelStr << "\033[0m" << "] ";
+        
+        // Library tag if enabled and set
+        if (libraryTagsEnabled && libraryName[0] != '\0') {
+            Color libraryColor = getLibraryColor(libraryName);
+            const char* libraryColorCode = colorToAnsi(libraryColor);
+            std::cout << "[";
+            if (libraryColor != Color::DEFAULT) {
+                std::cout << libraryColorCode << libraryName << "\033[0m";
+            } else {
+                std::cout << libraryName;
+            }
+            std::cout << "]";
+        }
+        
+        // Regular tag (always in brackets now)
+        std::cout << "[";
         if (tagColor != Color::DEFAULT) {
             std::cout << tagColorCode << tag << "\033[0m";
         } else {
             std::cout << tag;
         }
-        std::cout << ": " << message << std::endl;
+        std::cout << "]: " << message << std::endl;
 #else
-        printf("[%s] %s: %s\n", levelStr, tag, message);
+        printf("[%s] ", levelStr);
+        if (libraryTagsEnabled && libraryName[0] != '\0') {
+            printf("[%s]", libraryName);
+        }
+        printf("[%s]: %s\n", tag, message);
 #endif
     }
 }
@@ -498,5 +552,73 @@ inline void Logger::clearTagFilters() {
     }
 }
 #endif // CLOG_ENABLE_TAG_FILTERING
+
+// Library identification and control
+inline void Logger::setLibraryName(const char* name) {
+    if (name && strlen(name) > 0) {
+        strncpy(libraryName, name, sizeof(libraryName) - 1);
+        libraryName[sizeof(libraryName) - 1] = '\0';
+    } else {
+        libraryName[0] = '\0';
+    }
+}
+
+inline const char* Logger::getLibraryName() {
+    return libraryName;
+}
+
+inline void Logger::enableLibraryTags(bool enabled) {
+    libraryTagsEnabled = enabled;
+}
+
+inline bool Logger::isLibraryTagsEnabled() {
+    return libraryTagsEnabled;
+}
+
+// Library color management
+inline void Logger::setLibraryColor(const char* library, Color color) {
+    // First check if library already exists
+    for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
+        if (libraryColors[i].active && strcmp(libraryColors[i].library, library) == 0) {
+            libraryColors[i].color = color;
+            return;
+        }
+    }
+    
+    // Find empty slot
+    for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
+        if (!libraryColors[i].active) {
+            strncpy(libraryColors[i].library, library, sizeof(libraryColors[i].library) - 1);
+            libraryColors[i].library[sizeof(libraryColors[i].library) - 1] = '\0';
+            libraryColors[i].color = color;
+            libraryColors[i].active = true;
+            return;
+        }
+    }
+}
+
+inline void Logger::clearLibraryColor(const char* library) {
+    for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
+        if (libraryColors[i].active && strcmp(libraryColors[i].library, library) == 0) {
+            libraryColors[i].active = false;
+            return;
+        }
+    }
+}
+
+inline void Logger::clearAllLibraryColors() {
+    for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
+        libraryColors[i].active = false;
+    }
+}
+
+inline Color Logger::getLibraryColor(const char* library) {
+    for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
+        if (libraryColors[i].active && strcmp(libraryColors[i].library, library) == 0) {
+            return libraryColors[i].color;
+        }
+    }
+    return Color::DEFAULT;
+}
 
 } // namespace clogger

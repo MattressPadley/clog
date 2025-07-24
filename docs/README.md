@@ -9,6 +9,7 @@ CLog is a lightweight, header-only C++ logging library designed for cross-platfo
 - **Lightweight**: Minimal overhead suitable for embedded systems
 - **Flexible**: Supports both direct output and callback-based integration
 - **Dual filtering**: Both log level and tag-based filtering for granular control
+- **Library tagging**: Automatic identification for nested dependencies with parent-controlled visibility
 - **Configurable**: Compile-time log level filtering and buffer size configuration
 - **Colorized output**: Level-based colors and configurable tag colors for better visual distinction
 - **Zero dependencies**: Only uses standard C++ library features
@@ -108,6 +109,8 @@ build_flags =
 #define CLOG_BUFFER_SIZE 512      // Message buffer size
 #define CLOG_MAX_TAG_FILTERS 16   // Maximum number of tag filters
 #define CLOG_ENABLE_TAG_FILTERING 1 // Enable tag filtering (default: enabled)
+#define CLOG_MAX_LIBRARY_COLORS 16  // Maximum number of library colors
+#define CLOG_MAX_LIBRARY_NAME_LENGTH 32 // Maximum library name length
 #include <clog/log.hpp>
 ```
 
@@ -120,6 +123,8 @@ target_compile_definitions(your_target PRIVATE
     CLOG_BUFFER_SIZE=256
     CLOG_MAX_TAG_FILTERS=16
     CLOG_ENABLE_TAG_FILTERING=1
+    CLOG_MAX_LIBRARY_COLORS=16
+    CLOG_MAX_LIBRARY_NAME_LENGTH=32
 )
 ```
 
@@ -130,6 +135,8 @@ build_flags =
     -DCLOG_BUFFER_SIZE=256
     -DCLOG_MAX_TAG_FILTERS=16
     -DCLOG_ENABLE_TAG_FILTERING=1
+    -DCLOG_MAX_LIBRARY_COLORS=16
+    -DCLOG_MAX_LIBRARY_NAME_LENGTH=32
 ```
 
 ## API Reference
@@ -318,11 +325,133 @@ The colored output format is: `[<colored_level>] <colored_tag>: message`
 - Tag names are limited to 31 characters
 - Colors only affect direct console output (not callback-based logging)
 
+### Library Tagging for Nested Dependencies
+
+CLog provides automatic library identification for scenarios where your logging library is used as a dependency in other projects. This allows parent applications to distinguish logs from different libraries while keeping libraries completely autonomous.
+
+#### How Library Tagging Works
+
+1. **Libraries Self-Identify**: Each library calls `setLibraryName()` once during initialization
+2. **Parent Controls Visibility**: Parent applications use `enableLibraryTags()` to control whether library names appear in logs
+3. **Independent Operation**: Libraries work identically whether used standalone or as dependencies
+
+#### Library Tagging Methods
+
+```cpp
+// Library identification (called by libraries during initialization)
+clogger::Logger::setLibraryName("MyLibraryName");
+const char* name = clogger::Logger::getLibraryName();
+
+// Visibility control (called by parent applications)
+clogger::Logger::enableLibraryTags(true);   // Show library names in logs
+clogger::Logger::enableLibraryTags(false);  // Hide library names (default)
+bool enabled = clogger::Logger::isLibraryTagsEnabled();
+
+// Library-specific colors (independent from tag colors)
+clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_CYAN);
+clogger::Logger::clearLibraryColor("DatabaseLib");
+clogger::Logger::clearAllLibraryColors();
+```
+
+#### Output Format with Library Tagging
+
+- **Library tags disabled** (default): `[ERROR] [Tag]: message`
+- **Library tags enabled**: `[ERROR] [LibraryName][Tag]: message`
+- **With colors**: `[ERROR] [cyan_LibraryName][green_Tag]: message`
+
+#### Usage Example
+
+**In your library code (MyDatabaseLib/src/database.cpp):**
+```cpp
+#include <clog/log.hpp>
+
+void initDatabase() {
+    // Library identifies itself during initialization
+    clogger::Logger::setLibraryName("DatabaseLib");
+    
+    // Normal logging - no changes needed to existing code
+    CLOG_INFO("Init", "Database library initialized");  // Shows: [Init]: message
+    CLOG_INFO("Connection", "Connected to server");      // Shows: [Connection]: message
+}
+
+void performQuery(const std::string& sql) {
+    CLOG_DEBUG("Query", "Executing: %s", sql.c_str());
+    // ... database logic ...
+    CLOG_INFO("Query", "Query completed successfully");
+}
+```
+
+**In parent application (main.cpp):**
+```cpp
+#include <clog/log.hpp>
+#include "MyDatabaseLib/database.h"
+
+int main() {
+    // Initialize library (library sets its own name)
+    initDatabase();
+    
+    // Enable library identification in logs
+    clogger::Logger::enableLibraryTags(true);
+    
+    // Configure colors for better visual distinction
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
+    clogger::Logger::setTagColor("Query", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("Connection", clogger::Color::BRIGHT_YELLOW);
+    
+    // Now all DatabaseLib logs show: [DatabaseLib][Tag]: message
+    performQuery("SELECT * FROM users");  // Shows: [DatabaseLib][Query]: Executing: SELECT * FROM users
+                                         // Shows: [DatabaseLib][Query]: Query completed successfully
+    
+    // Your own application logs don't have library prefix
+    CLOG_INFO("App", "Application logic");  // Shows: [App]: Application logic
+    
+    return 0;
+}
+```
+
+#### Multi-Library Scenario
+
+```cpp
+// Multiple libraries can coexist with different identifiers
+void setupLibraries() {
+    // Each library identifies itself
+    networkLib::init();     // Calls setLibraryName("NetworkLib")
+    databaseLib::init();    // Calls setLibraryName("DatabaseLib")
+    audioLib::init();       // Calls setLibraryName("AudioLib")
+    
+    // Parent configures colors for each library
+    clogger::Logger::enableLibraryTags(true);
+    clogger::Logger::setLibraryColor("NetworkLib", clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setLibraryColor("AudioLib", clogger::Color::BRIGHT_YELLOW);
+}
+
+// Results in clear visual distinction:
+// [NetworkLib][HTTP]: Server started
+// [DatabaseLib][Query]: Connection established  
+// [AudioLib][Device]: Audio device initialized
+// [App]: Main application started
+```
+
+#### Benefits
+
+- **Library Development**: Clean output during library development (tags disabled by default)
+- **Integration Testing**: Easy identification of which library produced each log
+- **Production Debugging**: Quickly isolate issues to specific libraries
+- **No Code Changes**: Existing logging calls remain unchanged
+- **Autonomous Libraries**: Libraries manage their own identification without parent coordination
+
+#### Limitations
+
+- Maximum library name length: 32 characters (configurable)
+- Maximum of 16 different library colors (configurable)
+- Library names are global state (last `setLibraryName()` call wins)
+
 ## Examples
 
 The library includes comprehensive examples:
 
-- **Desktop Example**: Basic usage with colored console output, tag color configuration, and tag filtering demonstration
+- **Desktop Example**: Basic usage with colored console output, tag color configuration, library tagging, and tag filtering demonstration
 - **Arduino Example**: Embedded system logging with sensor simulation
 - **ESP32 Advanced**: Multi-task logging with WiFi and web server integration
 - **Callback Integration**: Advanced integration with parent application logging systems

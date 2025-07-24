@@ -31,6 +31,16 @@
     #define CLOG_MAX_TAG_FILTERS 16
 #endif
 
+// Maximum number of library colors
+#ifndef CLOG_MAX_LIBRARY_COLORS
+    #define CLOG_MAX_LIBRARY_COLORS 16
+#endif
+
+// Maximum library name length
+#ifndef CLOG_MAX_LIBRARY_NAME_LENGTH
+    #define CLOG_MAX_LIBRARY_NAME_LENGTH 32
+#endif
+
 // Enable/disable tag filtering feature
 #ifndef CLOG_ENABLE_TAG_FILTERING
     #define CLOG_ENABLE_TAG_FILTERING 1
@@ -93,6 +103,8 @@ constexpr size_t BUFFER_SIZE = CLOG_BUFFER_SIZE;
 constexpr size_t MAX_TAG_LENGTH = CLOG_MAX_TAG_LENGTH;
 constexpr size_t MAX_TAG_FILTERS = CLOG_MAX_TAG_FILTERS;
 constexpr bool TAG_FILTERING_ENABLED = CLOG_ENABLE_TAG_FILTERING;
+constexpr size_t MAX_LIBRARY_COLORS = CLOG_MAX_LIBRARY_COLORS;
+constexpr size_t MAX_LIBRARY_NAME_LENGTH = CLOG_MAX_LIBRARY_NAME_LENGTH;
 constexpr bool COLORS_ENABLED = CLOG_ENABLE_COLORS;
 constexpr bool TIMESTAMPS_ENABLED = CLOG_ENABLE_TIMESTAMPS;
 constexpr bool FILE_LINE_ENABLED = CLOG_ENABLE_FILE_LINE;

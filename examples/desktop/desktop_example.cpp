@@ -160,6 +160,66 @@ int main() {
     clogger::Logger::setCallback(nullptr);
     CLOG_INFO("Main", "Back to direct output");
     
+    std::cout << "\n--- Testing Library Tagging Feature ---" << std::endl;
+    
+    // Demonstrate library self-identification and parent control
+    std::cout << "Demonstrating library tagging functionality..." << std::endl;
+    
+    // Step 1: Library sets its own name
+    std::cout << "\n1. Library identifies itself (library tags disabled by default):" << std::endl;
+    clogger::Logger::setLibraryName("MyLib");
+    CLOG_INFO("Database", "Connection established");
+    CLOG_INFO("Network", "Socket opened");
+    
+    // Step 2: Parent application enables library tags
+    std::cout << "\n2. Parent application enables library tags:" << std::endl;
+    clogger::Logger::enableLibraryTags(true);
+    CLOG_INFO("Database", "Query executed successfully");
+    CLOG_INFO("Network", "Data packet received");
+    CLOG_ERROR("Security", "Authentication failed");
+    
+    // Step 3: Demonstrate library colors
+    std::cout << "\n3. Configure colors for library names:" << std::endl;
+    clogger::Logger::setLibraryColor("MyLib", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
+    
+    CLOG_INFO("Database", "Colored library and tag names");
+    CLOG_INFO("Network", "Library: cyan, Tag: magenta");
+    CLOG_ERROR("Security", "Library: cyan, Tag: red");
+    
+    // Step 4: Multiple libraries scenario
+    std::cout << "\n4. Simulating multiple libraries:" << std::endl;
+    
+    // Simulate first library
+    clogger::Logger::setLibraryName("DatabaseLib");
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
+    CLOG_INFO("Connection", "Database connection established");
+    CLOG_DEBUG("Query", "SELECT * FROM users");
+    
+    // Simulate second library  
+    clogger::Logger::setLibraryName("NetworkLib");
+    clogger::Logger::setLibraryColor("NetworkLib", clogger::Color::BRIGHT_YELLOW);
+    CLOG_INFO("HTTP", "Server started on port 8080");
+    CLOG_WARN("TCP", "Connection timeout detected");
+    
+    // Step 5: Disable library tags (back to regular format)
+    std::cout << "\n5. Parent disables library tags (back to regular format):" << std::endl;
+    clogger::Logger::enableLibraryTags(false);
+    CLOG_INFO("Database", "Still showing database operations");
+    CLOG_INFO("Network", "Still showing network operations");
+    
+    // Step 6: Show library context info
+    std::cout << "\n6. Library context information:" << std::endl;
+    std::cout << "Current library name: '" << clogger::Logger::getLibraryName() << "'" << std::endl;
+    std::cout << "Library tags enabled: " << (clogger::Logger::isLibraryTagsEnabled() ? "Yes" : "No") << std::endl;
+    
+    // Reset for next demo
+    clogger::Logger::enableLibraryTags(true);
+    clogger::Logger::setLibraryName("CLog");
+    clogger::Logger::setLibraryColor("CLog", clogger::Color::BRIGHT_WHITE);
+    
     std::cout << "\n--- Testing Tag Filtering Feature ---" << std::endl;
     
     // Demonstrate tag filtering capabilities

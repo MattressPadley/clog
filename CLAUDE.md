@@ -48,8 +48,9 @@ CLog is a **header-only C++ logging library** designed for cross-platform compat
 2. **Platform Abstraction**: Automatic detection of Arduino, ESP32, RP2040, and desktop platforms
 3. **Callback Integration**: Support for routing logs to parent application logging systems
 4. **Dual Filtering System**: Both log level and tag-based filtering for granular control
-5. **Compile-time Filtering**: Log levels can be filtered out at compile time for performance
-6. **Fixed Buffer Sizes**: Uses fixed-size buffers (default 512 bytes) for embedded compatibility
+5. **Library Tagging System**: Automatic nested library identification with parent-controlled visibility
+6. **Compile-time Filtering**: Log levels can be filtered out at compile time for performance
+7. **Fixed Buffer Sizes**: Uses fixed-size buffers (default 512 bytes) for embedded compatibility
 
 ### Log Levels
 - `OFF` (0) - No logging
@@ -105,6 +106,71 @@ Tag filtering works in combination with log level filtering:
 - **Production**: Whitelist only critical system tags
 - **Component Testing**: Focus on specific subsystem logs
 
+### Library Tagging System
+
+CLog supports automatic library identification for nested dependency scenarios, allowing parent applications to distinguish logs from different libraries while giving libraries full autonomy over their own identification.
+
+#### How It Works
+
+1. **Libraries Self-Identify**: Each library calls `setLibraryName()` once during initialization
+2. **Parent Controls Visibility**: Parent applications use `enableLibraryTags()` to control whether library names appear
+3. **Independent Operation**: Libraries work identically whether used standalone or as dependencies
+
+#### Library Tagging API
+
+```cpp
+// Library identification (called by libraries during init)
+clogger::Logger::setLibraryName("MyLibraryName");
+const char* name = clogger::Logger::getLibraryName();
+
+// Visibility control (called by parent applications)
+clogger::Logger::enableLibraryTags(true);   // Show library names
+clogger::Logger::enableLibraryTags(false);  // Hide library names
+bool enabled = clogger::Logger::isLibraryTagsEnabled();
+
+// Library-specific colors
+clogger::Logger::setLibraryColor("Database", clogger::Color::BRIGHT_CYAN);
+clogger::Logger::clearLibraryColor("Database");
+clogger::Logger::clearAllLibraryColors();
+```
+
+#### Output Format
+
+- **Library tags disabled** (default): `[ERROR] [Tag]: message`
+- **Library tags enabled**: `[ERROR] [LibraryName][Tag]: message`
+- **With colors**: `[ERROR] [cyan_Library][green_Tag]: message`
+
+#### Use Cases
+
+- **Library Development**: Set library name but keep tags disabled for clean development output
+- **Integration Testing**: Enable library tags to see which library each log comes from
+- **Production Debugging**: Quickly identify problematic libraries in multi-library applications
+- **Component Isolation**: Filter logs by library for focused debugging
+
+#### Integration Workflow
+
+```cpp
+// In MyDatabaseLib/src/database.cpp
+void initDatabase() {
+    clogger::Logger::setLibraryName("DatabaseLib");
+    CLOG_INFO("Init", "Database library initialized");  // [Init]: message
+}
+
+// In parent application main.cpp
+int main() {
+    initDatabase();
+    
+    // Enable library identification
+    clogger::Logger::enableLibraryTags(true);
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
+    
+    // Now all DatabaseLib logs show: [DatabaseLib][Tag]: message
+    performDatabaseOperation(); // [DatabaseLib][Query]: SELECT completed
+    
+    return 0;
+}
+```
+
 ### Usage Patterns
 
 **Standalone logging:**
@@ -140,6 +206,23 @@ CLOG_INFO("Debug", "Will be filtered");  // ✗ Filtered out
 bool enabled = clogger::Logger::isTagEnabled("Database");
 ```
 
+**Library tagging for nested dependencies:**
+```cpp
+// In library code (during initialization)
+clogger::Logger::setLibraryName("MyLib");
+
+// In parent application - control library tag visibility
+clogger::Logger::enableLibraryTags(true);   // Show [MyLib][Tag]: message
+clogger::Logger::enableLibraryTags(false);  // Show [Tag]: message
+
+// Configure colors for libraries and tags independently
+clogger::Logger::setLibraryColor("MyLib", clogger::Color::BRIGHT_CYAN);
+clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_GREEN);
+
+// Results in colored output: [cyan_MyLib][green_Database]: message
+CLOG_INFO("Database", "Connection established");
+```
+
 ### Build Integration
 
 - **CMake**: Uses `CMakeLists.txt` with interface library target `clogger::clog`
@@ -155,6 +238,8 @@ Compile-time configuration via preprocessor defines:
 - `CLOG_ENABLE_COLORS` - Enable color output (default: desktop only)
 - `CLOG_MAX_TAG_FILTERS` - Maximum number of tag filters (default: 16)
 - `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
+- `CLOG_MAX_LIBRARY_COLORS` - Maximum number of library colors (default: 16)
+- `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum library name length (default: 32)
 
 ### Testing Structure
 
