@@ -141,22 +141,86 @@ Tag filtering works in combination with log level filtering:
 
 CLog supports automatic library identification for nested dependency scenarios, allowing parent applications to distinguish logs from different libraries while giving libraries full autonomy over their own identification.
 
-#### How It Works
+CLog offers **two approaches** for library identification: runtime and compile-time. Both approaches work independently and can coexist, providing maximum flexibility for different use cases.
 
-1. **Libraries Self-Identify**: Each library calls `setLibraryName()` once during initialization
-2. **Parent Controls Visibility**: Parent applications use `enableLibraryTags()` to control whether library names appear
-3. **Independent Operation**: Libraries work identically whether used standalone or as dependencies
+#### Library Identification Approaches
+
+##### Approach 1: Compile-Time Identification (Recommended)
+
+Libraries define their name at compile time using a preprocessor macro before including the header:
+
+```cpp
+// In MyDatabaseLib/src/database.cpp
+#define CLOG_LIBRARY_NAME "DatabaseLib"
+#include <clog/log.hpp>
+
+void initDatabase() {
+    // No initialization call needed - library name is embedded at compile time
+    CLOG_INFO("Init", "Database library initialized");  // [DatabaseLib][Init]: message
+}
+```
+
+**Benefits:**
+- ✅ Zero runtime overhead for library identification
+- ✅ No initialization code required  
+- ✅ Automatic library name embedding
+- ✅ Perfect for header-only libraries
+- ✅ Eliminates global state issues between libraries
+
+##### Approach 2: Runtime Identification (Legacy/Dynamic)
+
+Libraries call `setLibraryName()` during initialization (maintains backward compatibility):
+
+```cpp
+// In MyDatabaseLib/src/database.cpp  
+#include <clog/log.hpp>
+
+void initDatabase() {
+    clogger::Logger::setLibraryName("DatabaseLib");
+    CLOG_INFO("Init", "Database library initialized");  // [DatabaseLib][Init]: message
+}
+```
+
+**Benefits:**
+- ✅ Dynamic library names possible
+- ✅ Can change library name at runtime
+- ✅ Backward compatible with existing code
+- ✅ No preprocessor management required
+
+#### Migration and Compatibility
+
+**Existing Code**: No changes required - runtime approach continues to work perfectly.
+
+**New Libraries**: Use compile-time approach for better performance:
+```cpp
+#define CLOG_LIBRARY_NAME "MyLib"
+#include <clog/log.hpp>
+// Ready to log - no initialization needed!
+```
+
+**Hybrid Approach**: Support both for maximum compatibility:
+```cpp
+#ifndef CLOG_LIBRARY_NAME
+    #define CLOG_LIBRARY_NAME "MyLib"
+#endif
+#include <clog/log.hpp>
+
+void init() {
+    // Optional runtime override for dynamic scenarios
+    clogger::Logger::setLibraryName("MyLib");
+}
+```
 
 #### Library Tagging API
 
 ```cpp
-// Library identification (called by libraries during init)
+// Runtime library identification  
 clogger::Logger::setLibraryName("MyLibraryName");
 const char* name = clogger::Logger::getLibraryName();
 
 // Visibility control (called by parent applications)
 clogger::Logger::enableLibraryTags(true);   // Show library names
-clogger::Logger::enableLibraryTags(false);  // Hide library names
+clogger::Logger::enableLibraryTags(false);  // Hide library names  
 bool enabled = clogger::Logger::isLibraryTagsEnabled();
 
 // Library-specific colors
@@ -177,14 +241,45 @@ clogger::Logger::clearAllLibraryColors();
 - **Integration Testing**: Enable library tags to see which library each log comes from
 - **Production Debugging**: Quickly identify problematic libraries in multi-library applications
 - **Component Isolation**: Filter logs by library for focused debugging
+- **Performance-Critical Code**: Use compile-time approach to eliminate runtime overhead
 
-#### Integration Workflow
+#### Integration Workflows
 
+##### Compile-Time Approach Workflow
 ```cpp
 // In MyDatabaseLib/src/database.cpp
+#define CLOG_LIBRARY_NAME "DatabaseLib"
+#include <clog/log.hpp>
+
+void initDatabase() {
+    CLOG_INFO("Init", "Database library initialized");  // Shows [DatabaseLib][Init]: message
+}
+
+void queryData() {
+    CLOG_DEBUG("Query", "Executing SELECT * FROM users");  // Shows [DatabaseLib][Query]: message
+}
+
+// In parent application main.cpp
+int main() {
+    // Enable library identification  
+    clogger::Logger::enableLibraryTags(true);
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
+    
+    initDatabase();    // [DatabaseLib][Init]: Database library initialized
+    queryData();       // [DatabaseLib][Query]: Executing SELECT * FROM users
+    
+    return 0;
+}
+```
+
+##### Runtime Approach Workflow (Legacy)
+```cpp
+// In MyDatabaseLib/src/database.cpp  
+#include <clog/log.hpp>
+
 void initDatabase() {
     clogger::Logger::setLibraryName("DatabaseLib");
-    CLOG_INFO("Init", "Database library initialized");  // [Init]: message
+    CLOG_INFO("Init", "Database library initialized");  // Shows [DatabaseLib][Init]: message
 }
 
 // In parent application main.cpp
@@ -201,6 +296,63 @@ int main() {
     return 0;
 }
 ```
+
+### Migration Guide
+
+#### From setLibraryName() to Compile-Time Identification
+
+**No Migration Required**: Existing code using `setLibraryName()` continues to work unchanged. Migration is optional and recommended for new projects.
+
+| Scenario | Recommendation | Action Required |
+|----------|---------------|-----------------|
+| **Existing Libraries** | Keep current approach | None - code works as-is |
+| **New Libraries** | Use compile-time approach | Define `CLOG_LIBRARY_NAME` macro |
+| **Performance-Critical** | Migrate to compile-time | Replace runtime calls with macro |
+| **Header-Only Libraries** | Use compile-time approach | Ideal for header-only distribution |
+
+**Migration Steps:**
+
+1. **Before (Runtime Approach):**
+```cpp
+#include <clog/log.hpp>
+
+void MyLibrary::init() {
+    clogger::Logger::setLibraryName("MyLib");
+    CLOG_INFO("Init", "Library ready");
+}
+```
+
+2. **After (Compile-Time Approach):**
+```cpp
+#define CLOG_LIBRARY_NAME "MyLib"
+#include <clog/log.hpp>
+
+void MyLibrary::init() {
+    // No setLibraryName() call needed
+    CLOG_INFO("Init", "Library ready");
+}
+```
+
+3. **Backward-Compatible (Hybrid):**
+```cpp
+#ifndef CLOG_LIBRARY_NAME
+    #define CLOG_LIBRARY_NAME "MyLib"
+#endif
+#include <clog/log.hpp>
+
+void MyLibrary::init() {
+    // Fallback for users who need runtime control
+    clogger::Logger::setLibraryName("MyLib");
+    CLOG_INFO("Init", "Library ready");
+}
+```
+
+#### Performance Comparison
+
+| Approach | Initialization Overhead | Runtime Overhead | Memory Usage |
+|----------|------------------------|------------------|--------------|
+| **Runtime** | One-time setup call | Thread-local lookup | Thread-local storage |
+| **Compile-Time** | None ✅ | Zero ✅ | String literal embedding |
 
 ### Usage Patterns
 
@@ -252,6 +404,12 @@ bool enabled = clogger::Logger::isTagEnabled("Database");
 
 **Library tagging for nested dependencies:**
 ```cpp
+// Approach 1: Compile-time identification (recommended)
+#define CLOG_LIBRARY_NAME "MyLib"
+#include <clog/log.hpp>
+// No initialization needed - library name embedded at compile time
+
+// Approach 2: Runtime identification (legacy/dynamic) 
 // In library code (during initialization)
 clogger::Logger::setLibraryName("MyLib");
 
@@ -277,14 +435,33 @@ CLOG_INFO("Database", "Connection established");
 ### Configuration
 
 Compile-time configuration via preprocessor defines:
+
+**Core Configuration:**
 - `CLOG_LEVEL` - Set maximum log level (0-5)
 - `CLOG_BUFFER_SIZE` - Message buffer size (default: 256 embedded, 512 desktop)
 - `CLOG_ENABLE_COLORS` - Enable color output (default: desktop only)
-- `CLOG_MAX_TAG_FILTERS` - Maximum number of tag filters (default: 16)
-- `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
-- `CLOG_MAX_LIBRARY_COLORS` - Maximum number of library colors (default: 16)
-- `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum library name length (default: 32)
 - `CLOG_ENABLE_ASSERTS` - Enable assertion macros (default: enabled in debug builds)
+
+**Library Identification:**
+- `CLOG_LIBRARY_NAME` - Define library name for compile-time identification (e.g., `#define CLOG_LIBRARY_NAME "MyLib"`)
+- `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum library name length (default: 32)
+- `CLOG_MAX_LIBRARY_COLORS` - Maximum number of library colors (default: 16)
+
+**Tag Filtering:**  
+- `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
+- `CLOG_MAX_TAG_FILTERS` - Maximum number of tag filters (default: 16)
+
+**Usage Examples:**
+```cpp
+// Library with compile-time identification
+#define CLOG_LIBRARY_NAME "DatabaseLib"
+#define CLOG_LEVEL 4  // Debug level
+#include <clog/log.hpp>
+
+// Custom buffer size for memory-constrained environments
+#define CLOG_BUFFER_SIZE 128
+#include <clog/log.hpp>
+```
 
 ### Testing Structure
 
