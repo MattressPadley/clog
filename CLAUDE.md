@@ -284,6 +284,7 @@ Compile-time configuration via preprocessor defines:
 - `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
 - `CLOG_MAX_LIBRARY_COLORS` - Maximum number of library colors (default: 16)
 - `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum library name length (default: 32)
+- `CLOG_ENABLE_ASSERTS` - Enable assertion macros (default: enabled in debug builds)
 
 ### Testing Structure
 

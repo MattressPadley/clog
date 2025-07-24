@@ -160,6 +160,7 @@ build_flags =
 #define CLOG_ENABLE_TAG_FILTERING 1 // Enable tag filtering (default: enabled)
 #define CLOG_MAX_LIBRARY_COLORS 16  // Maximum number of library colors
 #define CLOG_MAX_LIBRARY_NAME_LENGTH 32 // Maximum library name length
+#define CLOG_ENABLE_ASSERTS 1     // Enable assertion macros (default: debug builds only)
 #include <clog/log.hpp>
 ```
 
@@ -533,7 +534,6 @@ See the `examples/` directory for complete, runnable examples.
 
 - Default buffer size: 512 bytes
 - Color-coded console output
-- Thread-safe operation (planned for future release)
 
 ## Integration with Slide Kick
 

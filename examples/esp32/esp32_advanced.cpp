@@ -243,8 +243,10 @@ void handleStatus() {
 
 void handleLogs() {
     // In a real application, you might store recent logs in a buffer
-    String response = "Recent log entries would be served here\n";
-    response += "This is a placeholder for demonstration\n";
+    String response = "Recent log entries:\n";
+    response += "[INFO] [WebServer]: Server status endpoint accessed\n";
+    response += "[DEBUG] [WiFi]: Connection stable, RSSI: -45 dBm\n";
+    response += "[INFO] [Sensor]: Temperature: 22.5°C, Humidity: 65%\n";
     
     server.send(200, "text/plain", response);
     CLOG_DEBUG("WebServer", "Logs API served to client");

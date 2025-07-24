@@ -55,18 +55,8 @@
     #endif
 #endif
 
-#ifndef CLOG_ENABLE_TIMESTAMPS
-    #define CLOG_ENABLE_TIMESTAMPS 0  // Disabled by default to save space
-#endif
 
-#ifndef CLOG_ENABLE_FILE_LINE
-    #define CLOG_ENABLE_FILE_LINE 0   // Disabled by default to save space
-#endif
 
-// Thread safety (currently not implemented but reserved for future use)
-#ifndef CLOG_THREAD_SAFE
-    #define CLOG_THREAD_SAFE 0
-#endif
 
 // Assertion macro configuration
 #ifndef CLOG_ENABLE_ASSERTS
@@ -77,14 +67,6 @@
     #endif
 #endif
 
-// Performance optimization flags
-#ifndef CLOG_OPTIMIZE_SIZE
-    #ifdef CLOG_PLATFORM_EMBEDDED
-        #define CLOG_OPTIMIZE_SIZE 1  // Optimize for size on embedded platforms
-    #else
-        #define CLOG_OPTIMIZE_SIZE 0  // Optimize for performance on desktop
-    #endif
-#endif
 
 // Configuration validation
 namespace clogger {
@@ -106,11 +88,7 @@ constexpr bool TAG_FILTERING_ENABLED = CLOG_ENABLE_TAG_FILTERING;
 constexpr size_t MAX_LIBRARY_COLORS = CLOG_MAX_LIBRARY_COLORS;
 constexpr size_t MAX_LIBRARY_NAME_LENGTH = CLOG_MAX_LIBRARY_NAME_LENGTH;
 constexpr bool COLORS_ENABLED = CLOG_ENABLE_COLORS;
-constexpr bool TIMESTAMPS_ENABLED = CLOG_ENABLE_TIMESTAMPS;
-constexpr bool FILE_LINE_ENABLED = CLOG_ENABLE_FILE_LINE;
-constexpr bool THREAD_SAFE = CLOG_THREAD_SAFE;
 constexpr bool ASSERTS_ENABLED = CLOG_ENABLE_ASSERTS;
-constexpr bool SIZE_OPTIMIZED = CLOG_OPTIMIZE_SIZE;
 
 // Configuration summary for debugging
 inline void printConfig() {
@@ -122,27 +100,13 @@ inline void printConfig() {
     printf("  Max Tag Filters: %zu\n", MAX_TAG_FILTERS);
     printf("  Tag Filtering: %s\n", TAG_FILTERING_ENABLED ? "enabled" : "disabled");
     printf("  Colors: %s\n", COLORS_ENABLED ? "enabled" : "disabled");
-    printf("  Timestamps: %s\n", TIMESTAMPS_ENABLED ? "enabled" : "disabled");
-    printf("  File/Line: %s\n", FILE_LINE_ENABLED ? "enabled" : "disabled");
-    printf("  Thread Safe: %s\n", THREAD_SAFE ? "enabled" : "disabled");
     printf("  Asserts: %s\n", ASSERTS_ENABLED ? "enabled" : "disabled");
-    printf("  Size Optimized: %s\n", SIZE_OPTIMIZED ? "yes" : "no");
 #endif
 }
 
 } // namespace config
 } // namespace clogger
 
-// Enhanced macros with file/line information (if enabled)
-#if CLOG_ENABLE_FILE_LINE
-    #define CLOG_ERROR_FL(tag, fmt, ...)   clogger::Logger::error(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_WARN_FL(tag, fmt, ...)    clogger::Logger::warn(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_INFO_FL(tag, fmt, ...)    clogger::Logger::info(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_DEBUG_FL(tag, fmt, ...)   clogger::Logger::debug(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    #define CLOG_TRACE_FL(tag, fmt, ...)   clogger::Logger::trace(tag " (" __FILE__ ":" STRINGIFY(__LINE__) ")", fmt, ##__VA_ARGS__)
-    
-    #define STRINGIFY(x) #x
-#endif
 
 // Assert macro (if enabled)
 #if CLOG_ENABLE_ASSERTS
