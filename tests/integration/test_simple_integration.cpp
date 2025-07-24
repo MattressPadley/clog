@@ -39,7 +39,7 @@ int SimpleIntegrationTest::tests_passed = 0;
 std::vector<std::string> test_messages;
 int test_message_count = 0;
 
-void simpleTestCallback(clogger::Level level, const char* tag, const char* message) {
+void simpleTestCallback(clogger::Level level, const char* tag, const char* message, const char* libraryName) {
     test_message_count++;
     const char* level_str = "";
     switch (level) {
@@ -54,7 +54,7 @@ void simpleTestCallback(clogger::Level level, const char* tag, const char* messa
     test_messages.push_back(std::string(level_str) + ":" + tag + ":" + message);
 }
 
-void fileTestCallback(clogger::Level level, const char* tag, const char* message) {
+void fileTestCallback(clogger::Level level, const char* tag, const char* message, const char* libraryName) {
     std::ofstream file("test_integration.log", std::ios::app);
     if (file.is_open()) {
         file << "[" << tag << "] " << message << std::endl;
