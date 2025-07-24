@@ -863,6 +863,105 @@ void test_library_system_edge_cases() {
     clogger::Logger::enableAllTags();
 }
 
+void test_nested_library_tag_behavior() {
+    std::cout << "\n--- Testing Nested Library Tag Behavior ---" << std::endl;
+    
+    LogCapture capture;
+    clogger::Logger::setLevel(clogger::Level::INFO);
+    clogger::Logger::enableAllTags();
+    
+    // Scenario 1: Top-level application logs (no library name set)
+    clogger::Logger::setLibraryName(nullptr);
+    clogger::Logger::enableLibraryTags(false);  // Library tags disabled
+    
+    CLOG_INFO("App", "Top-level application message");
+    
+    auto logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Top-level message logged");
+    TestFramework::assert_equal("App", logs[0].tag, "Top-level tag preserved");
+    TestFramework::assert_equal("Top-level application message", logs[0].message, "Top-level message preserved");
+    
+    capture.clear();
+    
+    // Scenario 2: Library logs with library tags DISABLED (library sets name but parent disables display)
+    clogger::Logger::setLibraryName("MyNestedLib");  // Library identifies itself
+    clogger::Logger::enableLibraryTags(false);      // But parent keeps library tags disabled
+    
+    CLOG_INFO("Database", "Library operation with tags disabled");
+    
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Library message logged with tags disabled");
+    TestFramework::assert_equal("Database", logs[0].tag, "Library tag preserved when display disabled");
+    TestFramework::assert_equal("Library operation with tags disabled", logs[0].message, "Library message preserved");
+    // Note: In this case, the callback gets the raw tag "Database", but the formatted output 
+    // would NOT show the library name since library tags are disabled
+    
+    capture.clear();
+    
+    // Scenario 3: Library logs with library tags ENABLED (library name should appear in formatted output)
+    clogger::Logger::setLibraryName("MyNestedLib");  // Library identifies itself
+    clogger::Logger::enableLibraryTags(true);       // Parent enables library tag display
+    
+    CLOG_INFO("Database", "Library operation with tags enabled");
+    
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Library message logged with tags enabled");
+    TestFramework::assert_equal("Database", logs[0].tag, "Library tag preserved when display enabled");
+    TestFramework::assert_equal("Library operation with tags enabled", logs[0].message, "Library message preserved");
+    // Note: In this case, the formatted output would show [MyNestedLib][Database]: message
+    
+    capture.clear();
+    
+    // Scenario 4: Mixed top-level and library logs
+    clogger::Logger::enableLibraryTags(true);  // Parent has library tags enabled
+    
+    // Top-level app log (no library name)
+    clogger::Logger::setLibraryName(nullptr);
+    CLOG_INFO("MainApp", "Main application doing work");
+    
+    // Library log (with library name)
+    clogger::Logger::setLibraryName("DatabaseLib");
+    CLOG_INFO("Query", "Database query executed");
+    
+    // Another library log
+    clogger::Logger::setLibraryName("NetworkLib");
+    CLOG_INFO("HTTP", "HTTP request sent");
+    
+    // Back to top-level app
+    clogger::Logger::setLibraryName(nullptr);
+    CLOG_INFO("MainApp", "Main application finished");
+    
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 4, "Mixed application and library messages logged");
+    
+    // Verify message contents
+    TestFramework::assert_equal("MainApp", logs[0].tag, "First main app tag");
+    TestFramework::assert_equal("Main application doing work", logs[0].message, "First main app message");
+    
+    TestFramework::assert_equal("Query", logs[1].tag, "Database library tag");
+    TestFramework::assert_equal("Database query executed", logs[1].message, "Database library message");
+    
+    TestFramework::assert_equal("HTTP", logs[2].tag, "Network library tag");
+    TestFramework::assert_equal("HTTP request sent", logs[2].message, "Network library message");
+    
+    TestFramework::assert_equal("MainApp", logs[3].tag, "Second main app tag");
+    TestFramework::assert_equal("Main application finished", logs[3].message, "Second main app message");
+    
+    // Test library name tracking
+    clogger::Logger::setLibraryName("DatabaseLib");
+    const char* currentLib = clogger::Logger::getLibraryName();
+    TestFramework::assert_equal("DatabaseLib", std::string(currentLib), "Library name correctly tracked");
+    
+    clogger::Logger::setLibraryName(nullptr);
+    currentLib = clogger::Logger::getLibraryName();
+    TestFramework::assert_true(currentLib == nullptr || strlen(currentLib) == 0, "Library name cleared for top-level");
+    
+    // Reset state
+    clogger::Logger::setLibraryName(nullptr);
+    clogger::Logger::enableLibraryTags(false);
+    clogger::Logger::clearAllLibraryColors();
+}
+
 int main() {
     std::cout << "=== CLog Unit Tests ===" << std::endl;
     
@@ -891,6 +990,7 @@ int main() {
     test_library_tag_output_formatting();
     test_library_system_integration();
     test_library_system_edge_cases();
+    test_nested_library_tag_behavior();
     
     return TestFramework::summary();
 }
