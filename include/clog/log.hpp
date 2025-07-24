@@ -139,13 +139,13 @@ private:
     static TagColor tagColors[MAX_TAG_COLORS];
     
     // Library context storage
-    static char libraryName[64];
+    static char libraryName[config::MAX_LIBRARY_NAME_LENGTH + 1];
     static bool libraryTagsEnabled;
     
     // Library color storage
-    static constexpr size_t MAX_LIBRARY_COLORS = 16;
+    static constexpr size_t MAX_LIBRARY_COLORS = config::MAX_LIBRARY_COLORS;
     struct LibraryColor {
-        char library[32];
+        char library[config::MAX_LIBRARY_NAME_LENGTH + 1];
         Color color;
         bool active;
     };
@@ -227,7 +227,7 @@ inline Platform Logger::currentPlatform = Platform::DESKTOP;
 inline Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
 // Library context static members
-inline char Logger::libraryName[64] = "";
+inline char Logger::libraryName[config::MAX_LIBRARY_NAME_LENGTH + 1] = "";
 inline bool Logger::libraryTagsEnabled = false;
 inline Logger::LibraryColor Logger::libraryColors[MAX_LIBRARY_COLORS] = {};
 
@@ -707,6 +707,10 @@ inline bool Logger::isLibraryTagsEnabled() {
 
 // Library color management
 inline void Logger::setLibraryColor(const char* library, Color color) {
+    if (!library || strlen(library) == 0) {
+        return;  // Handle null or empty library name gracefully
+    }
+    
     // First check if library already exists
     for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
         if (libraryColors[i].active && strcmp(libraryColors[i].library, library) == 0) {
@@ -728,6 +732,10 @@ inline void Logger::setLibraryColor(const char* library, Color color) {
 }
 
 inline void Logger::clearLibraryColor(const char* library) {
+    if (!library || strlen(library) == 0) {
+        return;  // Handle null or empty library name gracefully
+    }
+    
     for (size_t i = 0; i < MAX_LIBRARY_COLORS; i++) {
         if (libraryColors[i].active && strcmp(libraryColors[i].library, library) == 0) {
             libraryColors[i].active = false;

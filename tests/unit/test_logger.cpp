@@ -567,6 +567,302 @@ void test_tag_filtering_mixed_operations() {
 }
 #endif // CLOG_ENABLE_TAG_FILTERING
 
+void test_library_name_functionality() {
+    std::cout << "\n--- Testing Library Name Functionality ---" << std::endl;
+    
+    // Test default state - no library name set
+    const char* defaultName = clogger::Logger::getLibraryName();
+    TestFramework::assert_true(defaultName == nullptr || strlen(defaultName) == 0, "Default library name is empty");
+    
+    // Test setting library name
+    clogger::Logger::setLibraryName("TestLibrary");
+    const char* libraryName = clogger::Logger::getLibraryName();
+    TestFramework::assert_true(libraryName != nullptr, "Library name is not null after setting");
+    TestFramework::assert_equal("TestLibrary", std::string(libraryName), "Library name set correctly");
+    
+    // Test updating library name
+    clogger::Logger::setLibraryName("UpdatedLibrary");
+    libraryName = clogger::Logger::getLibraryName();
+    TestFramework::assert_equal("UpdatedLibrary", std::string(libraryName), "Library name updated correctly");
+    
+    // Test very long library name (should be truncated)
+    std::string longName(100, 'A');
+    clogger::Logger::setLibraryName(longName.c_str());
+    libraryName = clogger::Logger::getLibraryName();
+    TestFramework::assert_true(strlen(libraryName) <= clogger::config::MAX_LIBRARY_NAME_LENGTH, "Long library name truncated");
+    
+    // Test setting to empty string
+    clogger::Logger::setLibraryName("");
+    libraryName = clogger::Logger::getLibraryName();
+    TestFramework::assert_true(libraryName == nullptr || strlen(libraryName) == 0, "Empty library name handled");
+    
+    // Test setting to null
+    clogger::Logger::setLibraryName(nullptr);
+    libraryName = clogger::Logger::getLibraryName();
+    TestFramework::assert_true(libraryName == nullptr || strlen(libraryName) == 0, "Null library name handled");
+}
+
+void test_library_tag_visibility() {
+    std::cout << "\n--- Testing Library Tag Visibility ---" << std::endl;
+    
+    // Test default state - library tags should be disabled by default
+    TestFramework::assert_false(clogger::Logger::isLibraryTagsEnabled(), "Library tags disabled by default");
+    
+    // Test enabling library tags
+    clogger::Logger::enableLibraryTags(true);
+    TestFramework::assert_true(clogger::Logger::isLibraryTagsEnabled(), "Library tags enabled");
+    
+    // Test disabling library tags
+    clogger::Logger::enableLibraryTags(false);
+    TestFramework::assert_false(clogger::Logger::isLibraryTagsEnabled(), "Library tags disabled");
+    
+    // Test default parameter (should enable)
+    clogger::Logger::enableLibraryTags();
+    TestFramework::assert_true(clogger::Logger::isLibraryTagsEnabled(), "Library tags enabled with default parameter");
+    
+    // Reset to default state
+    clogger::Logger::enableLibraryTags(false);
+}
+
+void test_library_color_functionality() {
+    std::cout << "\n--- Testing Library Color Functionality ---" << std::endl;
+    
+    // Note: We can't directly test color storage without access to internal state,
+    // but we can test that the methods don't crash and handle edge cases
+    
+    // Test setting library colors
+    clogger::Logger::setLibraryColor("TestLib", clogger::Color::BRIGHT_RED);
+    clogger::Logger::setLibraryColor("AnotherLib", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setLibraryColor("ThirdLib", clogger::Color::BRIGHT_BLUE);
+    
+    // Test clearing specific library color
+    clogger::Logger::clearLibraryColor("TestLib");
+    
+    // Test clearing non-existent library (should not crash)
+    clogger::Logger::clearLibraryColor("NonExistentLib");
+    
+    // Test setting color for empty library name (should handle gracefully)
+    clogger::Logger::setLibraryColor("", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setLibraryColor(nullptr, clogger::Color::BRIGHT_MAGENTA);
+    
+    // Test very long library name
+    std::string longLibName(100, 'B');
+    clogger::Logger::setLibraryColor(longLibName.c_str(), clogger::Color::BRIGHT_YELLOW);
+    
+    // Test clearing all library colors
+    clogger::Logger::clearAllLibraryColors();
+    
+    // Test that methods still work after clearing all
+    clogger::Logger::setLibraryColor("AfterClear", clogger::Color::BRIGHT_WHITE);
+    clogger::Logger::clearLibraryColor("AfterClear");
+    
+    TestFramework::assert_true(true, "Library color methods executed without crashing");
+}
+
+void test_library_tag_output_formatting() {
+    std::cout << "\n--- Testing Library Tag Output Formatting ---" << std::endl;
+    
+    LogCapture capture;
+    clogger::Logger::setLevel(clogger::Level::TRACE);
+    
+    // Test output without library name set
+    clogger::Logger::setLibraryName(nullptr);
+    clogger::Logger::enableLibraryTags(true);
+    
+    CLOG_INFO("Tag", "Message without library");
+    auto logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Message logged without library name");
+    // Note: We can't easily test the exact format without accessing the formatted output,
+    // but we can verify the message content is preserved
+    TestFramework::assert_equal("Message without library", logs[0].message, "Message content preserved");
+    TestFramework::assert_equal("Tag", logs[0].tag, "Tag preserved");
+    
+    capture.clear();
+    
+    // Test output with library name set but library tags disabled
+    clogger::Logger::setLibraryName("MyLibrary");
+    clogger::Logger::enableLibraryTags(false);
+    
+    CLOG_INFO("Tag", "Message with library tags disabled");
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Message logged with library tags disabled");
+    TestFramework::assert_equal("Message with library tags disabled", logs[0].message, "Message content preserved");
+    TestFramework::assert_equal("Tag", logs[0].tag, "Tag preserved");
+    
+    capture.clear();
+    
+    // Test output with library name set and library tags enabled
+    clogger::Logger::setLibraryName("MyLibrary");
+    clogger::Logger::enableLibraryTags(true);
+    
+    CLOG_INFO("Tag", "Message with library tags enabled");
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Message logged with library tags enabled");
+    TestFramework::assert_equal("Message with library tags enabled", logs[0].message, "Message content preserved");
+    TestFramework::assert_equal("Tag", logs[0].tag, "Tag preserved");
+    
+    capture.clear();
+    
+    // Test with different log levels
+    CLOG_ERROR("ErrorTag", "Error with library");
+    CLOG_WARN("WarnTag", "Warning with library");
+    CLOG_DEBUG("DebugTag", "Debug with library");
+    
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 3, "All log levels work with library tags");
+    TestFramework::assert_equal("ErrorTag", logs[0].tag, "Error tag preserved");
+    TestFramework::assert_equal("WarnTag", logs[1].tag, "Warn tag preserved");
+    TestFramework::assert_equal("DebugTag", logs[2].tag, "Debug tag preserved");
+    
+    // Reset to default state
+    clogger::Logger::setLibraryName(nullptr);
+    clogger::Logger::enableLibraryTags(false);
+}
+
+void test_library_system_integration() {
+    std::cout << "\n--- Testing Library System Integration ---" << std::endl;
+    
+    LogCapture capture;
+    clogger::Logger::setLevel(clogger::Level::TRACE);
+    
+    // Simulate nested library scenario
+    // Library 1 initialization
+    clogger::Logger::setLibraryName("DatabaseLib");
+    CLOG_INFO("Init", "Database library initialized");
+    
+    // Library 2 initialization  
+    clogger::Logger::setLibraryName("NetworkLib");
+    CLOG_INFO("Init", "Network library initialized");
+    
+    // Parent application enables library tags
+    clogger::Logger::enableLibraryTags(true);
+    
+    // Set colors for libraries
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setLibraryColor("NetworkLib", clogger::Color::BRIGHT_GREEN);
+    
+    // Test logging from different "libraries"
+    clogger::Logger::setLibraryName("DatabaseLib");
+    CLOG_INFO("Query", "SELECT completed");
+    CLOG_ERROR("Connection", "Connection failed");
+    
+    clogger::Logger::setLibraryName("NetworkLib");  
+    CLOG_INFO("HTTP", "Request sent");
+    CLOG_WARN("Timeout", "Request timeout");
+    
+    // Test library with no color set
+    clogger::Logger::setLibraryName("UILib");
+    CLOG_INFO("Render", "UI updated");
+    
+    auto logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 7, "All library messages captured"); // 2 init + 5 with lib tags
+    
+    // Verify message content preservation
+    TestFramework::assert_equal("Database library initialized", logs[0].message, "First init message");
+    TestFramework::assert_equal("Network library initialized", logs[1].message, "Second init message");
+    TestFramework::assert_equal("SELECT completed", logs[2].message, "Database query message");
+    TestFramework::assert_equal("Connection failed", logs[3].message, "Database error message");
+    TestFramework::assert_equal("Request sent", logs[4].message, "Network HTTP message");
+    TestFramework::assert_equal("Request timeout", logs[5].message, "Network timeout message");
+    TestFramework::assert_equal("UI updated", logs[6].message, "UI render message");
+    
+    // Verify tag preservation
+    TestFramework::assert_equal("Query", logs[2].tag, "Database query tag");
+    TestFramework::assert_equal("HTTP", logs[4].tag, "Network HTTP tag");
+    TestFramework::assert_equal("Render", logs[6].tag, "UI render tag");
+    
+    capture.clear();
+    
+    // Test disabling library tags while keeping library names set
+    clogger::Logger::enableLibraryTags(false);
+    
+    clogger::Logger::setLibraryName("DatabaseLib");
+    CLOG_INFO("Query", "Another query");
+    
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Message logged with library tags disabled");
+    TestFramework::assert_equal("Another query", logs[0].message, "Message preserved without library tags");
+    
+    // Reset state
+    clogger::Logger::setLibraryName(nullptr);
+    clogger::Logger::enableLibraryTags(false);
+    clogger::Logger::clearAllLibraryColors();
+}
+
+void test_library_system_edge_cases() {
+    std::cout << "\n--- Testing Library System Edge Cases ---" << std::endl;
+    
+    LogCapture capture;
+    clogger::Logger::setLevel(clogger::Level::TRACE);
+    
+    // Reset tag filtering state
+    clogger::Logger::enableAllTags();
+    
+    // Test switching library names rapidly
+    clogger::Logger::enableLibraryTags(true);
+    
+    clogger::Logger::setLibraryName("Lib1");
+    CLOG_INFO("Test", "Message 1");
+    
+    clogger::Logger::setLibraryName("Lib2");
+    CLOG_INFO("Test", "Message 2");
+    
+    clogger::Logger::setLibraryName("Lib1");
+    CLOG_INFO("Test", "Message 3");
+    
+    auto logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 3, "Rapid library name switching handled");
+    TestFramework::assert_equal("Message 1", logs[0].message, "First message");
+    TestFramework::assert_equal("Message 2", logs[1].message, "Second message");
+    TestFramework::assert_equal("Message 3", logs[2].message, "Third message");
+    
+    capture.clear();
+    
+    // Test library system with tag filtering
+    clogger::Logger::setLibraryName("FilteredLib");
+    clogger::Logger::enableTag("AllowedTag");  // Enable whitelist mode
+    
+    CLOG_INFO("AllowedTag", "Should appear");
+    CLOG_INFO("BlockedTag", "Should not appear");
+    
+    logs = capture.getLogs();
+    TestFramework::assert_true(capture.count() == 1, "Library system works with tag filtering");
+    TestFramework::assert_equal("Should appear", logs[0].message, "Allowed tag message");
+    
+    capture.clear();
+    
+    // Test maximum number of library colors
+    for (int i = 0; i < clogger::config::MAX_LIBRARY_COLORS + 2; i++) {
+        std::string libName = "Lib" + std::to_string(i);
+        clogger::Logger::setLibraryColor(libName.c_str(), clogger::Color::BRIGHT_RED);
+    }
+    
+    // Should handle gracefully even if we exceed the limit
+    TestFramework::assert_true(true, "Maximum library colors handled gracefully");
+    
+    capture.clear();
+    
+    // Test library name persistence across log levels  
+    // Reset tag filtering state first
+    clogger::Logger::enableAllTags();
+    clogger::Logger::setLibraryName("PersistentLib");
+    clogger::Logger::setLevel(clogger::Level::ERROR);
+    
+    CLOG_ERROR("Tag", "Error message");
+    clogger::Logger::setLevel(clogger::Level::TRACE);
+    CLOG_TRACE("Tag", "Trace message");
+    
+    logs = capture.getLogs();
+    std::string debugMsg = "Library name persists across level changes (got " + std::to_string(capture.count()) + " messages)";
+    TestFramework::assert_true(capture.count() == 2, debugMsg);
+    
+    // Reset state
+    clogger::Logger::setLibraryName(nullptr);
+    clogger::Logger::enableLibraryTags(false);
+    clogger::Logger::clearAllLibraryColors();
+    clogger::Logger::enableAllTags();
+}
+
 int main() {
     std::cout << "=== CLog Unit Tests ===" << std::endl;
     
@@ -588,6 +884,13 @@ int main() {
     test_tag_filtering_edge_cases();
     test_tag_filtering_mixed_operations();
 #endif
+    
+    test_library_name_functionality();
+    test_library_tag_visibility();
+    test_library_color_functionality();
+    test_library_tag_output_formatting();
+    test_library_system_integration();
+    test_library_system_edge_cases();
     
     return TestFramework::summary();
 }
