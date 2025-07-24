@@ -51,7 +51,8 @@
     
 #else
     #define CLOG_PLATFORM_UNKNOWN
-    #warning "Unknown platform detected - CLog may not function correctly"
+    // Note: With runtime platform configuration, users should call Logger::setPlatform()
+    // to explicitly configure their platform instead of relying on compile-time detection
 #endif
 
 // Feature detection

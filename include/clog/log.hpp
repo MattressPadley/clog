@@ -49,6 +49,20 @@ enum class Color {
     BRIGHT_WHITE
 };
 
+enum class Platform {
+    ARDUINO,
+    ESP32,
+    ESP8266,
+    RP2040_ARDUINO,
+    RP2040_SDK,
+    ESP_IDF,
+    DESKTOP,
+    WINDOWS,
+    LINUX,
+    MACOS,
+    AUTO_DETECT  // Default: attempt automatic detection
+};
+
 class Logger {
 public:
     // Core API
@@ -63,6 +77,18 @@ public:
     
     // Platform-specific initialization (optional)
     static void init();
+    static void init(Platform platform);
+    
+    // Platform configuration
+    static void setPlatform(Platform platform);
+    static Platform getPlatform();
+    
+    // Platform detection helpers
+    static bool isArduinoPlatform();
+    static bool isDesktopPlatform();
+    static bool isEmbeddedPlatform();
+    static bool hasColorSupport();
+    static bool hasPrintfSupport();
     
     // Tag color configuration
     static void setTagColor(const char* tag, Color color);
@@ -99,6 +125,9 @@ private:
     static Level currentLevel;
     static Callback logCallback;
     static bool directOutput;
+    
+    // Platform configuration
+    static Platform currentPlatform;
     
     // Tag color storage
     static constexpr size_t MAX_TAG_COLORS = 32;
@@ -194,6 +223,7 @@ namespace clogger {
 inline Level Logger::currentLevel = Level::INFO;
 inline Logger::Callback Logger::logCallback = nullptr;
 inline bool Logger::directOutput = true;
+inline Platform Logger::currentPlatform = Platform::DESKTOP;
 inline Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
 // Library context static members
@@ -228,47 +258,54 @@ inline void Logger::output(Level level, const char* tag, const char* message) {
     } else if (directOutput) {
         const char* levelStr = levelToString(level);
         
-#ifdef CLOG_PLATFORM_ARDUINO
-        Serial.printf("[%s] ", levelStr);
-        if (libraryTagsEnabled && libraryName[0] != '\0') {
-            Serial.printf("[%s]", libraryName);
-        }
-        Serial.printf("[%s]: %s\n", tag, message);
-#elif defined(CLOG_PLATFORM_DESKTOP)
-        const char* levelColor = levelToColor(level);
-        Color tagColor = getTagColor(tag);
-        const char* tagColorCode = colorToAnsi(tagColor);
-        
-        std::cout << "[" << levelColor << levelStr << "\033[0m" << "] ";
-        
-        // Library tag if enabled and set
-        if (libraryTagsEnabled && libraryName[0] != '\0') {
-            Color libraryColor = getLibraryColor(libraryName);
-            const char* libraryColorCode = colorToAnsi(libraryColor);
-            std::cout << "[";
-            if (libraryColor != Color::DEFAULT) {
-                std::cout << libraryColorCode << libraryName << "\033[0m";
-            } else {
-                std::cout << libraryName;
+        if (isArduinoPlatform()) {
+            // Arduino platform: use Serial.printf
+            #ifdef ARDUINO
+            Serial.printf("[%s] ", levelStr);
+            if (libraryTagsEnabled && libraryName[0] != '\0') {
+                Serial.printf("[%s]", libraryName);
             }
-            std::cout << "]";
-        }
-        
-        // Regular tag (always in brackets now)
-        std::cout << "[";
-        if (tagColor != Color::DEFAULT) {
-            std::cout << tagColorCode << tag << "\033[0m";
+            Serial.printf("[%s]: %s\n", tag, message);
+            #endif
+        } else if (isDesktopPlatform()) {
+            // Desktop platform: use std::cout with colors
+            #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
+            const char* levelColor = levelToColor(level);
+            Color tagColor = getTagColor(tag);
+            const char* tagColorCode = colorToAnsi(tagColor);
+            
+            std::cout << "[" << levelColor << levelStr << "\033[0m" << "] ";
+            
+            // Library tag if enabled and set
+            if (libraryTagsEnabled && libraryName[0] != '\0') {
+                Color libraryColor = getLibraryColor(libraryName);
+                const char* libraryColorCode = colorToAnsi(libraryColor);
+                std::cout << "[";
+                if (libraryColor != Color::DEFAULT) {
+                    std::cout << libraryColorCode << libraryName << "\033[0m";
+                } else {
+                    std::cout << libraryName;
+                }
+                std::cout << "]";
+            }
+            
+            // Regular tag (always in brackets now)
+            std::cout << "[";
+            if (tagColor != Color::DEFAULT) {
+                std::cout << tagColorCode << tag << "\033[0m";
+            } else {
+                std::cout << tag;
+            }
+            std::cout << "]: " << message << std::endl;
+            #endif
         } else {
-            std::cout << tag;
+            // Fallback: use printf
+            printf("[%s] ", levelStr);
+            if (libraryTagsEnabled && libraryName[0] != '\0') {
+                printf("[%s]", libraryName);
+            }
+            printf("[%s]: %s\n", tag, message);
         }
-        std::cout << "]: " << message << std::endl;
-#else
-        printf("[%s] ", levelStr);
-        if (libraryTagsEnabled && libraryName[0] != '\0') {
-            printf("[%s]", libraryName);
-        }
-        printf("[%s]: %s\n", tag, message);
-#endif
     }
 }
 
@@ -368,11 +405,104 @@ inline void Logger::trace(const char* tag, const char* format, ...)  {
 inline void Logger::setLevel(Level level) { currentLevel = level; }
 inline Level Logger::getLevel() { return currentLevel; }
 inline void Logger::enableDirectOutput(bool enabled) { directOutput = enabled; }
+
+// Platform configuration methods
+inline void Logger::setPlatform(Platform platform) { currentPlatform = platform; }
+inline Platform Logger::getPlatform() { return currentPlatform; }
+
+// Platform detection helpers
+inline bool Logger::isArduinoPlatform() {
+    if (currentPlatform == Platform::AUTO_DETECT) {
+        // Fallback to compile-time detection for AUTO_DETECT
+        #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
+            #ifdef ARDUINO
+                return true;
+            #endif
+        #endif
+        return false;
+    }
+    return currentPlatform == Platform::ARDUINO || 
+           currentPlatform == Platform::ESP32 || 
+           currentPlatform == Platform::ESP8266 || 
+           currentPlatform == Platform::RP2040_ARDUINO;
+}
+
+inline bool Logger::isDesktopPlatform() {
+    if (currentPlatform == Platform::AUTO_DETECT) {
+        // Fallback to compile-time detection for AUTO_DETECT
+        #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
+            return true;
+        #endif
+        return false;
+    }
+    return currentPlatform == Platform::DESKTOP ||
+           currentPlatform == Platform::WINDOWS ||
+           currentPlatform == Platform::LINUX ||
+           currentPlatform == Platform::MACOS;
+}
+
+inline bool Logger::isEmbeddedPlatform() {
+    if (currentPlatform == Platform::AUTO_DETECT) {
+        // Fallback to compile-time detection for AUTO_DETECT
+        #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
+            return true;
+        #endif
+        return false;
+    }
+    return currentPlatform == Platform::ARDUINO || 
+           currentPlatform == Platform::ESP32 || 
+           currentPlatform == Platform::ESP8266 || 
+           currentPlatform == Platform::RP2040_ARDUINO ||
+           currentPlatform == Platform::RP2040_SDK ||
+           currentPlatform == Platform::ESP_IDF;
+}
+
+inline bool Logger::hasColorSupport() {
+    if (currentPlatform == Platform::AUTO_DETECT) {
+        // Fallback to compile-time detection for AUTO_DETECT
+        #if defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_ESP_IDF)
+            return true;
+        #endif
+        return false;
+    }
+    return currentPlatform == Platform::DESKTOP ||
+           currentPlatform == Platform::WINDOWS ||
+           currentPlatform == Platform::LINUX ||
+           currentPlatform == Platform::MACOS ||
+           currentPlatform == Platform::ESP_IDF;
+}
+
+inline bool Logger::hasPrintfSupport() {
+    if (currentPlatform == Platform::AUTO_DETECT) {
+        // Fallback to compile-time detection for AUTO_DETECT
+        #if defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP_IDF)
+            return true;
+        #endif
+        return false;
+    }
+    return currentPlatform == Platform::ARDUINO || 
+           currentPlatform == Platform::ESP32 || 
+           currentPlatform == Platform::ESP8266 || 
+           currentPlatform == Platform::RP2040_ARDUINO ||
+           currentPlatform == Platform::ESP_IDF;
+}
+
 inline void Logger::init() {
-    // Platform-specific initialization if needed
-#ifdef CLOG_PLATFORM_ARDUINO
-    // Serial already initialized by Arduino framework
-#endif
+    // Platform-specific initialization based on runtime platform
+    if (currentPlatform == Platform::RP2040_SDK) {
+        // RP2040 SDK requires stdio initialization
+        #if defined(PICO_SDK_VERSION_MAJOR)
+        stdio_init_all();
+        #endif
+    }
+    // Arduino platforms: Serial already initialized by Arduino framework
+    // Desktop platforms: std::cout/printf ready by default
+    // ESP-IDF: logging already initialized
+}
+
+inline void Logger::init(Platform platform) {
+    setPlatform(platform);
+    init();
 }
 
 // Tag color management

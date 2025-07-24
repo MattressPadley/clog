@@ -1,4 +1,4 @@
-# CLog - Unified Logging Library
+ CLog - Unified Logging Library
 
 CLog is a lightweight, header-only C++ logging library designed for cross-platform compatibility across embedded systems (Arduino, ESP32, RP2040) and desktop platforms. It provides consistent logging APIs with callback support for integration into larger applications.
 
@@ -58,12 +58,61 @@ int main() {
 }
 ```
 
-## Supported Platforms
+## Platform Configuration
 
-- **Desktop**: Windows, Linux, macOS
+CLog now supports explicit platform configuration to eliminate build warnings and ensure reliable cross-platform operation.
+
+### Supported Platforms
+
+- **Desktop**: Windows, Linux, macOS (default)
 - **Arduino**: All Arduino-compatible boards
 - **ESP32/ESP8266**: Both Arduino framework and ESP-IDF
 - **Raspberry Pi Pico**: RP2040 with Arduino framework or Pico SDK
+
+### Platform Configuration API
+
+```cpp
+// Available platforms
+enum class Platform {
+    ARDUINO, ESP32, ESP8266, RP2040_ARDUINO, RP2040_SDK,
+    ESP_IDF, DESKTOP, WINDOWS, LINUX, MACOS, AUTO_DETECT
+};
+
+// Explicit platform configuration (recommended for embedded)
+clogger::Logger::init(clogger::Platform::RP2040_SDK);
+
+// Or set platform separately
+clogger::Logger::setPlatform(clogger::Platform::RP2040_SDK);
+clogger::Logger::init();
+
+// Query current platform
+clogger::Platform current = clogger::Logger::getPlatform();
+```
+
+### Platform-Specific Usage
+
+**RP2040 with Pico SDK:**
+```cpp
+#include <clog/log.hpp>
+
+int main() {
+    // Explicitly configure for RP2040 SDK to avoid build warnings
+    clogger::Logger::init(clogger::Platform::RP2040_SDK);
+    CLOG_INFO("App", "RP2040 application started");
+    return 0;
+}
+```
+
+**Desktop Development (default):**
+```cpp
+#include <clog/log.hpp>
+
+int main() {
+    // No platform configuration needed - defaults to desktop
+    CLOG_INFO("App", "Desktop application started");
+    return 0;
+}
+```
 
 ## Installation
 
@@ -175,8 +224,11 @@ clogger::Logger::setCallback(myCallback);
 // Enable/disable direct output
 clogger::Logger::enableDirectOutput(true);
 
-// Platform-specific initialization (usually not needed)
+// Platform-specific initialization
 clogger::Logger::init();
+
+// Or set platform explicitly (recommended for embedded platforms)
+clogger::Logger::init(clogger::Platform::RP2040_SDK);
 ```
 
 ### Tag Filtering

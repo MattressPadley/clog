@@ -60,6 +60,37 @@ CLog is a **header-only C++ logging library** designed for cross-platform compat
 - `DEBUG` (4) - Debug messages and above
 - `TRACE` (5) - All messages including trace
 
+### Platform Configuration
+
+CLog supports explicit platform configuration to avoid compile-time detection issues:
+
+**Available Platforms:**
+- `Platform::ARDUINO` - Arduino framework
+- `Platform::ESP32` - ESP32 boards
+- `Platform::ESP8266` - ESP8266 boards  
+- `Platform::RP2040_ARDUINO` - RP2040 with Arduino framework
+- `Platform::RP2040_SDK` - RP2040 with Pico SDK
+- `Platform::ESP_IDF` - ESP-IDF framework
+- `Platform::DESKTOP` - Generic desktop platform
+- `Platform::WINDOWS` - Windows desktop
+- `Platform::LINUX` - Linux desktop
+- `Platform::MACOS` - macOS desktop
+- `Platform::AUTO_DETECT` - Automatic detection (may trigger warnings)
+
+**Configuration API:**
+```cpp
+// Default is DESKTOP platform (works for most development)
+// For embedded platforms, set explicitly:
+clogger::Logger::init(clogger::Platform::RP2040_SDK);
+
+// Or set platform separately
+clogger::Logger::setPlatform(clogger::Platform::RP2040_SDK);
+clogger::Logger::init();
+
+// Query current platform
+clogger::Platform current = clogger::Logger::getPlatform();
+```
+
 ### Tag-Based Filtering
 
 CLog supports granular filtering by tag names in addition to log levels, allowing you to focus on specific components or functional areas of your application.
@@ -172,6 +203,19 @@ int main() {
 ```
 
 ### Usage Patterns
+
+**Platform configuration (recommended for RP2040 and other platforms):**
+```cpp
+#include <clog/log.hpp>
+
+// Explicit platform configuration - eliminates build warnings
+clogger::Logger::init(clogger::Platform::RP2040_SDK);
+// or
+clogger::Logger::setPlatform(clogger::Platform::RP2040_SDK);
+clogger::Logger::init();
+
+CLOG_INFO("MyApp", "Application started");
+```
 
 **Standalone logging:**
 ```cpp
