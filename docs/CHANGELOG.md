@@ -1,5 +1,25 @@
 # Changelog
 
+# 0.1.0 (2025-07-24)
+
+## Features
+- Add runtime platform configuration to eliminate build warnings
+- Add comprehensive test suite for nested library system
+
+## Bug Fixes
+- Fix library tagging global state issue preventing correct library identification
+- Add explicit test for nested library tag visibility behavior
+
+## Improvements
+- **BREAKING CHANGE**: Switch from runtime to compile-time library identification for better performance
+- Update documentation for new compile-time library identification system
+- Remove unimplemented configuration flags and clean up codebase
+
+## Other
+- Claude Code Review workflow
+- Claude PR Assistant workflow
+
+
 All notable changes to the CLog library will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

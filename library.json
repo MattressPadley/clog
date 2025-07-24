@@ -1,7 +1,52 @@
 {
-  "name": "CLog",
-  "version": "0.0.1",
+  "authors": [
+    {
+      "email": "hello@matthadley.me",
+      "maintainer": true,
+      "name": "MattressPadley"
+    }
+  ],
+  "build": {
+    "flags": [
+      "-std=c++17"
+    ],
+    "includeDir": "include"
+  },
+  "dependencies": {},
   "description": "Unified, lightweight C++ logging library for embedded and desktop platforms",
+  "examples": [
+    {
+      "base": "examples/arduino",
+      "files": [
+        "arduino_basic.cpp"
+      ],
+      "name": "Arduino Basic"
+    },
+    {
+      "base": "examples/esp32",
+      "files": [
+        "esp32_advanced.cpp"
+      ],
+      "name": "ESP32 Advanced"
+    },
+    {
+      "base": "examples/callback",
+      "files": [
+        "callback_example.cpp"
+      ],
+      "name": "Callback Integration"
+    }
+  ],
+  "export": {
+    "include": "include"
+  },
+  "frameworks": [
+    "arduino",
+    "espidf",
+    "pico-sdk"
+  ],
+  "headers": "log.hpp",
+  "homepage": "https://github.com/MattressPadley/clog",
   "keywords": [
     "logging",
     "embedded",
@@ -11,24 +56,8 @@
     "cross-platform",
     "header-only"
   ],
-  "authors": [
-    {
-      "name": "MattressPadley",
-      "email": "hello@matthadley.me",
-      "maintainer": true
-    }
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MattressPadley/clog.git"
-  },
   "license": "MIT",
-  "homepage": "https://github.com/MattressPadley/clog",
-  "frameworks": [
-    "arduino",
-    "espidf",
-    "pico-sdk"
-  ],
+  "name": "CLog",
   "platforms": [
     "espressif32",
     "espressif8266",
@@ -38,42 +67,13 @@
     "teensy",
     "native"
   ],
-  "headers": "log.hpp",
-  "export": {
-    "include": "include"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MattressPadley/clog.git"
   },
-  "build": {
-    "includeDir": "include",
-    "flags": [
-      "-std=c++17"
-    ]
-  },
-  "examples": [
-    {
-      "name": "Arduino Basic",
-      "base": "examples/arduino",
-      "files": [
-        "arduino_basic.cpp"
-      ]
-    },
-    {
-      "name": "ESP32 Advanced",
-      "base": "examples/esp32",
-      "files": [
-        "esp32_advanced.cpp"
-      ]
-    },
-    {
-      "name": "Callback Integration",
-      "base": "examples/callback",
-      "files": [
-        "callback_example.cpp"
-      ]
-    }
-  ],
-  "dependencies": {},
   "scripts": {
-    "test": "pio test",
-    "build": "pio run"
-  }
+    "build": "pio run",
+    "test": "pio test"
+  },
+  "version": "0.1.0"
 }
