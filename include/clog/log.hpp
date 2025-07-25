@@ -493,7 +493,7 @@ inline bool Logger::hasColorSupport() {
         // Fall back to runtime configuration
         if (currentPlatform == Platform::AUTO_DETECT) {
             // Fallback to compile-time detection for AUTO_DETECT
-            #if defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_ESP_IDF)
+            #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__) || defined(ESP_PLATFORM)
                 return true;
             #endif
             return false;
@@ -516,7 +516,7 @@ inline bool Logger::hasPrintfSupport() {
         // Fall back to runtime configuration
         if (currentPlatform == Platform::AUTO_DETECT) {
             // Fallback to compile-time detection for AUTO_DETECT
-            #if defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP_IDF)
+            #if defined(ARDUINO) || defined(ESP_PLATFORM)
                 return true;
             #endif
             return false;
