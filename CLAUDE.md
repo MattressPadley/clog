@@ -438,23 +438,225 @@ endif()
 add_subdirectory(path/to/clog)
 ```
 
+### Log Level Hierarchy & Best Practices
+
+When using CLog in multi-library projects, it's crucial to establish proper log level hierarchy where the top-level application has final control over log levels across all dependencies. This section outlines best practices for both library developers and application developers.
+
+#### How Log Level Hierarchy Works
+
+CLog uses standard C preprocessor patterns that naturally support hierarchical configuration:
+
+1. **Preprocessor precedence**: `#ifndef CLOG_LEVEL` allows later definitions to override earlier ones
+2. **CMake definition precedence**: CMake applies `target_compile_definitions` in dependency order
+3. **Application override**: Top-level applications can override any library's log level settings
+
+#### Best Practices for Library Developers
+
+**DO - Use PRIVATE definitions with sensible defaults:**
+
+```cmake
+# In MyDatabaseLib/CMakeLists.txt (GOOD)
+add_library(database_lib src/database.cpp)
+target_compile_definitions(database_lib PRIVATE
+    CLOG_LIBRARY_NAME="DatabaseLib"
+    CLOG_LEVEL=3  # INFO level - reasonable default for library development
+)
+target_link_libraries(database_lib PRIVATE clog::clog)
+```
+
+**DON'T - Use PUBLIC/INTERFACE definitions that force levels on consumers:**
+
+```cmake
+# In MyDatabaseLib/CMakeLists.txt (BAD - forces level on all consumers)
+target_compile_definitions(database_lib PUBLIC CLOG_LEVEL=4)  # DON'T DO THIS
+target_compile_definitions(database_lib INTERFACE CLOG_LEVEL=4)  # DON'T DO THIS
+```
+
+**Library Code Pattern:**
+
+```cpp
+// In MyDatabaseLib/src/database.cpp - set reasonable default if not configured
+#ifndef CLOG_LEVEL
+    #define CLOG_LEVEL 3  // INFO level default
+#endif
+#include <clog/log.hpp>
+
+void initDatabase() {
+    CLOG_INFO("Init", "Database library initialized");
+}
+```
+
+#### Best Practices for Application Developers
+
+**Method 1: CMake Cache Variables (Recommended)**
+
+```cmake
+# In application CMakeLists.txt - this OVERRIDES all library settings
+set(CLOG_LEVEL "4" CACHE STRING "Global log level for all components")
+
+# Or set via command line: cmake -DCLOG_LEVEL=4 ..
+# This automatically applies to all targets that use target_compile_definitions
+
+add_executable(my_app main.cpp)
+target_compile_definitions(my_app PRIVATE CLOG_LEVEL=${CLOG_LEVEL})
+target_link_libraries(my_app PRIVATE database_lib network_lib clog::clog)
+```
+
+**Method 2: Global Definition Override**
+
+```cmake
+# In application CMakeLists.txt - override for all targets
+add_compile_definitions(CLOG_LEVEL=4)  # Applies globally
+
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE database_lib network_lib clog::clog)
+```
+
+**Method 3: Per-Target Override**
+
+```cmake
+# In application CMakeLists.txt - explicit control
+add_executable(my_app main.cpp)
+target_compile_definitions(my_app PRIVATE
+    CLOG_LEVEL=4  # This overrides any library PRIVATE definitions
+)
+target_link_libraries(my_app PRIVATE database_lib network_lib clog::clog)
+```
+
+#### Complete Workflow Example
+
+**Library Setup (MyDatabaseLib/CMakeLists.txt):**
+
+```cmake
+# Library sets reasonable default for standalone development
+add_library(database_lib src/database.cpp)
+target_compile_definitions(database_lib PRIVATE
+    CLOG_LIBRARY_NAME="DatabaseLib"
+    CLOG_LEVEL=3  # INFO level - good for library development
+)
+target_link_libraries(database_lib PRIVATE clog::clog)
+```
+
+**Application Setup (MyApp/CMakeLists.txt):**
+
+```cmake
+# Application controls final log level for all components
+set(CLOG_LEVEL "5" CACHE STRING "Global log level")
+
+add_executable(my_app main.cpp)
+target_compile_definitions(my_app PRIVATE
+    CLOG_LEVEL=${CLOG_LEVEL}  # This OVERRIDES library's CLOG_LEVEL=3
+)
+
+# Include the library
+find_package(clog QUIET)
+if(NOT clog_FOUND)
+    add_subdirectory(external/clog)
+endif()
+add_subdirectory(libs/MyDatabaseLib)
+
+target_link_libraries(my_app PRIVATE database_lib clog::clog)
+```
+
+**Result:**
+- During library development: `database_lib` uses INFO level (3)
+- When used in application: `my_app` controls level (5 = TRACE), overriding library default
+- Application developer can set level via: `cmake -DCLOG_LEVEL=2 ..` (WARN level)
+
+#### Verification Methods
+
+**Check effective log level:**
+
+```cpp
+// In application main.cpp
+#include <clog/log.hpp>
+#include <clog/config.hpp>
+
+int main() {
+    // Print compile-time configuration
+    printf("Effective CLOG_LEVEL: %d\n", CLOG_LEVEL);
+    clogger::config::printConfig();  // Shows all effective settings
+    
+    // Test different levels to verify
+    CLOG_ERROR("Test", "Error - should always show");
+    CLOG_WARN("Test", "Warning - shows if level >= 2");  
+    CLOG_INFO("Test", "Info - shows if level >= 3");
+    CLOG_DEBUG("Test", "Debug - shows if level >= 4");
+    CLOG_TRACE("Test", "Trace - shows if level >= 5");
+    
+    return 0;
+}
+```
+
+**CMake verification:**
+
+```bash
+# Check what level is actually being used
+cmake --build . --verbose | grep CLOG_LEVEL
+
+# Or check compile commands
+grep -r "CLOG_LEVEL" build/compile_commands.json
+```
+
+#### Common Issues & Solutions
+
+**Issue 1: Library level not being overridden**
+- **Cause**: Library uses PUBLIC/INTERFACE definitions
+- **Solution**: Library should use PRIVATE definitions only
+
+**Issue 2: Application level not applying**  
+- **Cause**: Application doesn't define CLOG_LEVEL for the target
+- **Solution**: Use `target_compile_definitions` on application target
+
+**Issue 3: Inconsistent levels across libraries**
+- **Cause**: Each library sets different PRIVATE levels
+- **Solution**: Application uses global `add_compile_definitions(CLOG_LEVEL=4)` to override all
+
+**Issue 4: Level seems ignored**
+- **Cause**: Runtime `setLevel()` call overriding compile-time setting
+- **Solution**: Remove runtime calls, rely on compile-time filtering for performance
+
+#### Key Principles
+
+1. **Application is Master**: Top-level application has final say on log levels
+2. **Libraries Set Defaults**: Libraries can set sensible PRIVATE defaults for development
+3. **Use Compile-time Filtering**: Prefer `CLOG_LEVEL` over runtime `setLevel()` for performance
+4. **Verify Configuration**: Always test that hierarchy is working as expected
+5. **Document Assumptions**: Library documentation should state the default log level
+
 ### Configuration
 
 **Recommended: CMake Configuration**
 
-The preferred way to configure CLog is through CMake's `target_compile_definitions`:
+The preferred way to configure CLog is through CMake's `target_compile_definitions`. For multi-library projects, see the [Log Level Hierarchy & Best Practices](#log-level-hierarchy--best-practices) section above for proper override patterns.
+
+**For Libraries (use PRIVATE definitions):**
 
 ```cmake
-# Configure library with CMake (recommended)
+# Configure library with CMake (recommended for libraries)
 add_library(my_library src/database.cpp)
 target_compile_definitions(my_library PRIVATE
     CLOG_LIBRARY_NAME="DatabaseLib"    # Library identification
-    CLOG_LEVEL=4                       # Debug level
+    CLOG_LEVEL=3                       # INFO level - reasonable default
     CLOG_BUFFER_SIZE=512               # Buffer size
     CLOG_ENABLE_TAG_FILTERING=1        # Enable tag filtering
     CLOG_MAX_TAG_FILTERS=32            # Increase tag filter capacity
 )
 target_link_libraries(my_library PRIVATE clog::clog)
+```
+
+**For Applications (override library settings):**
+
+```cmake
+# Configure application to override all library defaults
+set(CLOG_LEVEL "4" CACHE STRING "Global log level for all components")
+
+add_executable(my_app main.cpp)
+target_compile_definitions(my_app PRIVATE
+    CLOG_LEVEL=${CLOG_LEVEL}           # Overrides library defaults
+    CLOG_BUFFER_SIZE=1024              # Larger buffer for applications
+)
+target_link_libraries(my_app PRIVATE my_library clog::clog)
 
 # Platform configuration can also be set via CMake
 set(CLOG_PLATFORM "ESP32" CACHE STRING "CLog target platform")
