@@ -77,7 +77,33 @@ CLog supports explicit platform configuration to avoid compile-time detection is
 - `Platform::MACOS` - macOS desktop
 - `Platform::AUTO_DETECT` - Automatic detection (may trigger warnings)
 
-**Configuration API:**
+**Compile-time Configuration (Recommended):**
+
+CLog supports compile-time platform configuration via CMake, which eliminates the need for runtime platform detection and avoids potential warnings:
+
+```cmake
+# Configure platform at build time
+cmake -DCLOG_PLATFORM=RP2040_SDK ..
+make
+
+# Or set in CMakeLists.txt
+set(CLOG_PLATFORM "ESP32" CACHE STRING "CLog target platform")
+```
+
+Supported CLOG_PLATFORM values:
+- `AUTO_DETECT` (default) - Automatic detection
+- `ARDUINO` - Arduino framework  
+- `ESP32` - ESP32 boards
+- `ESP8266` - ESP8266 boards
+- `RP2040_ARDUINO` - RP2040 with Arduino framework
+- `RP2040_SDK` - RP2040 with Pico SDK
+- `ESP_IDF` - ESP-IDF framework
+- `DESKTOP` - Generic desktop platform
+- `WINDOWS` - Windows desktop
+- `LINUX` - Linux desktop
+- `MACOS` - macOS desktop
+
+**Runtime Configuration API (Alternative):**
 ```cpp
 // Default is DESKTOP platform (works for most development)
 // For embedded platforms, set explicitly:
@@ -264,11 +290,28 @@ int main() {
 
 ### Usage Patterns
 
-**Platform configuration (recommended for RP2040 and other platforms):**
+**Compile-time platform configuration (recommended):**
+```cmake
+# In CMakeLists.txt - set platform at build time
+cmake -DCLOG_PLATFORM=RP2040_SDK ..
+
+# Or set in your CMakeLists.txt
+set(CLOG_PLATFORM "RP2040_SDK" CACHE STRING "CLog target platform")
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE clog::clog)
+```
+
+```cpp
+#include <clog/log.hpp>
+// No initialization needed - platform configured at compile time
+CLOG_INFO("MyApp", "Application started");
+```
+
+**Runtime platform configuration (alternative):**
 ```cpp
 #include <clog/log.hpp>
 
-// Explicit platform configuration - eliminates build warnings
+// Explicit runtime platform configuration
 clogger::Logger::init(clogger::Platform::RP2040_SDK);
 // or
 clogger::Logger::setPlatform(clogger::Platform::RP2040_SDK);
@@ -360,6 +403,10 @@ target_compile_definitions(my_library PRIVATE
     CLOG_MAX_TAG_FILTERS=32            # Increase tag filter capacity
 )
 target_link_libraries(my_library PRIVATE clog::clog)
+
+# Platform configuration can also be set via CMake
+set(CLOG_PLATFORM "ESP32" CACHE STRING "CLog target platform")
+# Or passed as command-line argument: cmake -DCLOG_PLATFORM=RP2040_SDK ..
 ```
 
 **Alternative: Preprocessor Defines**

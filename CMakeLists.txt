@@ -24,6 +24,48 @@ target_sources(clog INTERFACE
 # Create an alias for easier usage
 add_library(clog::clog ALIAS clog)
 
+# Platform configuration option
+set(CLOG_PLATFORM "AUTO_DETECT" CACHE STRING "Target platform for CLog (AUTO_DETECT, ARDUINO, ESP32, ESP8266, RP2040_ARDUINO, RP2040_SDK, ESP_IDF, DESKTOP, WINDOWS, LINUX, MACOS)")
+set_property(CACHE CLOG_PLATFORM PROPERTY STRINGS 
+    "AUTO_DETECT" "ARDUINO" "ESP32" "ESP8266" "RP2040_ARDUINO" "RP2040_SDK" "ESP_IDF" "DESKTOP" "WINDOWS" "LINUX" "MACOS")
+
+# Validate and configure platform
+if(CLOG_PLATFORM STREQUAL "AUTO_DETECT")
+    message(STATUS "CLog: Using automatic platform detection")
+elseif(CLOG_PLATFORM STREQUAL "ARDUINO")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_ARDUINO=1)
+    message(STATUS "CLog: Configured for Arduino platform")
+elseif(CLOG_PLATFORM STREQUAL "ESP32")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_ESP32=1)
+    message(STATUS "CLog: Configured for ESP32 platform")
+elseif(CLOG_PLATFORM STREQUAL "ESP8266")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_ESP8266=1)
+    message(STATUS "CLog: Configured for ESP8266 platform")
+elseif(CLOG_PLATFORM STREQUAL "RP2040_ARDUINO")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_RP2040_ARDUINO=1)
+    message(STATUS "CLog: Configured for RP2040-Arduino platform")
+elseif(CLOG_PLATFORM STREQUAL "RP2040_SDK")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_RP2040_SDK=1)
+    message(STATUS "CLog: Configured for RP2040-SDK platform")
+elseif(CLOG_PLATFORM STREQUAL "ESP_IDF")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_ESP_IDF=1)
+    message(STATUS "CLog: Configured for ESP-IDF platform")
+elseif(CLOG_PLATFORM STREQUAL "DESKTOP")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_DESKTOP=1)
+    message(STATUS "CLog: Configured for Desktop platform")
+elseif(CLOG_PLATFORM STREQUAL "WINDOWS")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_WINDOWS=1)
+    message(STATUS "CLog: Configured for Windows platform")
+elseif(CLOG_PLATFORM STREQUAL "LINUX")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_LINUX=1)
+    message(STATUS "CLog: Configured for Linux platform")
+elseif(CLOG_PLATFORM STREQUAL "MACOS")
+    target_compile_definitions(clog INTERFACE CLOG_PLATFORM_MACOS=1)
+    message(STATUS "CLog: Configured for macOS platform")
+else()
+    message(FATAL_ERROR "Invalid CLOG_PLATFORM value: ${CLOG_PLATFORM}. Valid options are: AUTO_DETECT, ARDUINO, ESP32, ESP8266, RP2040_ARDUINO, RP2040_SDK, ESP_IDF, DESKTOP, WINDOWS, LINUX, MACOS")
+endif()
+
 # Optional: Build examples if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     option(CLOG_BUILD_EXAMPLES "Build CLog examples" ON)
