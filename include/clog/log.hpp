@@ -414,89 +414,137 @@ inline Platform Logger::getPlatform() { return currentPlatform; }
 
 // Platform detection helpers
 inline bool Logger::isArduinoPlatform() {
-    if (currentPlatform == Platform::AUTO_DETECT) {
-        // Fallback to compile-time detection for AUTO_DETECT
-        #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
-            #ifdef ARDUINO
-                return true;
-            #endif
-        #endif
+    // Priority: CMake-configured platform → runtime platform → auto-detection
+    #if defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP32) || defined(CLOG_PLATFORM_ESP8266) || defined(CLOG_PLATFORM_RP2040_ARDUINO)
+        return true;
+    #elif defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_WINDOWS) || defined(CLOG_PLATFORM_LINUX) || defined(CLOG_PLATFORM_MACOS) || defined(CLOG_PLATFORM_RP2040_SDK) || defined(CLOG_PLATFORM_ESP_IDF)
         return false;
-    }
-    return currentPlatform == Platform::ARDUINO || 
-           currentPlatform == Platform::ESP32 || 
-           currentPlatform == Platform::ESP8266 || 
-           currentPlatform == Platform::RP2040_ARDUINO;
+    #else
+        // Fall back to runtime configuration
+        if (currentPlatform == Platform::AUTO_DETECT) {
+            // Fallback to compile-time detection for AUTO_DETECT
+            #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
+                #ifdef ARDUINO
+                    return true;
+                #endif
+            #endif
+            return false;
+        }
+        return currentPlatform == Platform::ARDUINO || 
+               currentPlatform == Platform::ESP32 || 
+               currentPlatform == Platform::ESP8266 || 
+               currentPlatform == Platform::RP2040_ARDUINO;
+    #endif
 }
 
 inline bool Logger::isDesktopPlatform() {
-    if (currentPlatform == Platform::AUTO_DETECT) {
-        // Fallback to compile-time detection for AUTO_DETECT
-        #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
-            return true;
-        #endif
+    // Priority: CMake-configured platform → runtime platform → auto-detection
+    #if defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_WINDOWS) || defined(CLOG_PLATFORM_LINUX) || defined(CLOG_PLATFORM_MACOS)
+        return true;
+    #elif defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP32) || defined(CLOG_PLATFORM_ESP8266) || defined(CLOG_PLATFORM_RP2040_ARDUINO) || defined(CLOG_PLATFORM_RP2040_SDK) || defined(CLOG_PLATFORM_ESP_IDF)
         return false;
-    }
-    return currentPlatform == Platform::DESKTOP ||
-           currentPlatform == Platform::WINDOWS ||
-           currentPlatform == Platform::LINUX ||
-           currentPlatform == Platform::MACOS;
+    #else
+        // Fall back to runtime configuration
+        if (currentPlatform == Platform::AUTO_DETECT) {
+            // Fallback to compile-time detection for AUTO_DETECT
+            #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
+                return true;
+            #endif
+            return false;
+        }
+        return currentPlatform == Platform::DESKTOP ||
+               currentPlatform == Platform::WINDOWS ||
+               currentPlatform == Platform::LINUX ||
+               currentPlatform == Platform::MACOS;
+    #endif
 }
 
 inline bool Logger::isEmbeddedPlatform() {
-    if (currentPlatform == Platform::AUTO_DETECT) {
-        // Fallback to compile-time detection for AUTO_DETECT
-        #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
-            return true;
-        #endif
+    // Priority: CMake-configured platform → runtime platform → auto-detection
+    #if defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP32) || defined(CLOG_PLATFORM_ESP8266) || defined(CLOG_PLATFORM_RP2040_ARDUINO) || defined(CLOG_PLATFORM_RP2040_SDK) || defined(CLOG_PLATFORM_ESP_IDF)
+        return true;
+    #elif defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_WINDOWS) || defined(CLOG_PLATFORM_LINUX) || defined(CLOG_PLATFORM_MACOS)
         return false;
-    }
-    return currentPlatform == Platform::ARDUINO || 
-           currentPlatform == Platform::ESP32 || 
-           currentPlatform == Platform::ESP8266 || 
-           currentPlatform == Platform::RP2040_ARDUINO ||
-           currentPlatform == Platform::RP2040_SDK ||
-           currentPlatform == Platform::ESP_IDF;
+    #else
+        // Fall back to runtime configuration
+        if (currentPlatform == Platform::AUTO_DETECT) {
+            // Fallback to compile-time detection for AUTO_DETECT
+            #if defined(ARDUINO) || defined(ESP32) || defined(ESP_PLATFORM)
+                return true;
+            #endif
+            return false;
+        }
+        return currentPlatform == Platform::ARDUINO || 
+               currentPlatform == Platform::ESP32 || 
+               currentPlatform == Platform::ESP8266 || 
+               currentPlatform == Platform::RP2040_ARDUINO ||
+               currentPlatform == Platform::RP2040_SDK ||
+               currentPlatform == Platform::ESP_IDF;
+    #endif
 }
 
 inline bool Logger::hasColorSupport() {
-    if (currentPlatform == Platform::AUTO_DETECT) {
-        // Fallback to compile-time detection for AUTO_DETECT
-        #if defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_ESP_IDF)
-            return true;
-        #endif
+    // Priority: CMake-configured platform → runtime platform → auto-detection
+    #if defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_WINDOWS) || defined(CLOG_PLATFORM_LINUX) || defined(CLOG_PLATFORM_MACOS) || defined(CLOG_PLATFORM_ESP_IDF)
+        return true;
+    #elif defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP32) || defined(CLOG_PLATFORM_ESP8266) || defined(CLOG_PLATFORM_RP2040_ARDUINO) || defined(CLOG_PLATFORM_RP2040_SDK)
         return false;
-    }
-    return currentPlatform == Platform::DESKTOP ||
-           currentPlatform == Platform::WINDOWS ||
-           currentPlatform == Platform::LINUX ||
-           currentPlatform == Platform::MACOS ||
-           currentPlatform == Platform::ESP_IDF;
+    #else
+        // Fall back to runtime configuration
+        if (currentPlatform == Platform::AUTO_DETECT) {
+            // Fallback to compile-time detection for AUTO_DETECT
+            #if defined(_WIN32) || defined(__linux__) || defined(__APPLE__) || defined(ESP_PLATFORM)
+                return true;
+            #endif
+            return false;
+        }
+        return currentPlatform == Platform::DESKTOP ||
+               currentPlatform == Platform::WINDOWS ||
+               currentPlatform == Platform::LINUX ||
+               currentPlatform == Platform::MACOS ||
+               currentPlatform == Platform::ESP_IDF;
+    #endif
 }
 
 inline bool Logger::hasPrintfSupport() {
-    if (currentPlatform == Platform::AUTO_DETECT) {
-        // Fallback to compile-time detection for AUTO_DETECT
-        #if defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP_IDF)
-            return true;
-        #endif
+    // Priority: CMake-configured platform → runtime platform → auto-detection
+    #if defined(CLOG_PLATFORM_ARDUINO) || defined(CLOG_PLATFORM_ESP32) || defined(CLOG_PLATFORM_ESP8266) || defined(CLOG_PLATFORM_RP2040_ARDUINO) || defined(CLOG_PLATFORM_ESP_IDF)
+        return true;
+    #elif defined(CLOG_PLATFORM_DESKTOP) || defined(CLOG_PLATFORM_WINDOWS) || defined(CLOG_PLATFORM_LINUX) || defined(CLOG_PLATFORM_MACOS) || defined(CLOG_PLATFORM_RP2040_SDK)
         return false;
-    }
-    return currentPlatform == Platform::ARDUINO || 
-           currentPlatform == Platform::ESP32 || 
-           currentPlatform == Platform::ESP8266 || 
-           currentPlatform == Platform::RP2040_ARDUINO ||
-           currentPlatform == Platform::ESP_IDF;
+    #else
+        // Fall back to runtime configuration
+        if (currentPlatform == Platform::AUTO_DETECT) {
+            // Fallback to compile-time detection for AUTO_DETECT
+            #if defined(ARDUINO) || defined(ESP_PLATFORM)
+                return true;
+            #endif
+            return false;
+        }
+        return currentPlatform == Platform::ARDUINO || 
+               currentPlatform == Platform::ESP32 || 
+               currentPlatform == Platform::ESP8266 || 
+               currentPlatform == Platform::RP2040_ARDUINO ||
+               currentPlatform == Platform::ESP_IDF;
+    #endif
 }
 
 inline void Logger::init() {
-    // Platform-specific initialization based on runtime platform
-    if (currentPlatform == Platform::RP2040_SDK) {
+    // Platform-specific initialization: CMake config → runtime platform → auto-detection
+    #if defined(CLOG_PLATFORM_RP2040_SDK)
         // RP2040 SDK requires stdio initialization
         #if defined(PICO_SDK_VERSION_MAJOR)
         stdio_init_all();
         #endif
-    }
+    #elif !defined(CLOG_PLATFORM_ARDUINO) && !defined(CLOG_PLATFORM_ESP32) && !defined(CLOG_PLATFORM_ESP8266) && !defined(CLOG_PLATFORM_RP2040_ARDUINO) && !defined(CLOG_PLATFORM_ESP_IDF) && !defined(CLOG_PLATFORM_DESKTOP) && !defined(CLOG_PLATFORM_WINDOWS) && !defined(CLOG_PLATFORM_LINUX) && !defined(CLOG_PLATFORM_MACOS)
+        // Fall back to runtime platform configuration
+        if (currentPlatform == Platform::RP2040_SDK) {
+            // RP2040 SDK requires stdio initialization
+            #if defined(PICO_SDK_VERSION_MAJOR)
+            stdio_init_all();
+            #endif
+        }
+    #endif
     // Arduino platforms: Serial already initialized by Arduino framework
     // Desktop platforms: std::cout/printf ready by default
     // ESP-IDF: logging already initialized
