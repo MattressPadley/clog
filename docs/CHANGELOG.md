@@ -1,5 +1,12 @@
 # Changelog
 
+# 0.1.3 (2025-07-25)
+
+## Improvements
+- Restructured documentation into focused, well-organized files for better navigation
+- Added comprehensive best practices guide for log level hierarchy management
+
+
 # 0.1.2 (2025-07-25)
 
 ## Features
