@@ -1,5 +1,21 @@
 # Changelog
 
+# 0.1.2 (2025-07-25)
+
+## Features
+- Added compile-time log level configuration for better performance control
+
+## Bug Fixes
+- Fixed buffer size consistency and code quality issues
+
+## Improvements
+- Simplified platform detection system
+- Enhanced README to better highlight key differentiating features
+
+## Other
+- Updated documentation to reflect compile-time configuration changes
+
+
 # 0.1.1 (2025-07-25)
 
 ## Features
