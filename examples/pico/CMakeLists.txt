@@ -44,6 +44,14 @@ add_executable(pico_example pico_example.cpp)
 # Add the CLog include directory
 target_include_directories(pico_example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
+# Set compile-time log level to TRACE (5) for comprehensive example output
+target_compile_definitions(pico_example PRIVATE 
+    CLOG_LEVEL=5
+    CLOG_PLATFORM_RP2040_SDK
+    CLOG_HAS_COLOR_SUPPORT=0      # RP2040 doesn't support colors
+    CLOG_HAS_PRINTF_SUPPORT=1     # RP2040 uses printf for output
+)
+
 # Link to pico_stdlib (required for Pico SDK functionality)
 target_link_libraries(pico_example pico_stdlib)
 

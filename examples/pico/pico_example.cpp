@@ -1,8 +1,8 @@
+#include <pico/stdlib.h>
+#include <stdio.h>
 #include <clog/log.hpp>
 #include <clog/config.hpp>
 #include <clog/platform.hpp>
-#include <pico/stdlib.h>
-#include <stdio.h>
 
 int main() {
     // Initialize Pico SDK
@@ -28,8 +28,7 @@ int main() {
     clogger::config::printConfig();
     printf("\n");
     
-    // Set log level to show all messages
-    clogger::Logger::setLevel(clogger::Level::TRACE);
+    // Log level set to TRACE at compile-time via CMake (CLOG_LEVEL=5)
     
     // Basic logging test - show all levels
     printf("\n=== Basic Logging Test ===\n");
@@ -46,24 +45,16 @@ int main() {
     
     CLOG_INFO("Demo", "Processing %d items with value %.2f, status: %s", count, value, status);
     
-    // Test different log levels
-    printf("\n--- Testing different log levels ---\n");
+    // Compile-time log level demonstration
+    printf("\n--- Compile-time log level (all levels visible) ---\n");
     
-    clogger::Logger::setLevel(clogger::Level::ERROR);
-    CLOG_ERROR("Level", "Only ERROR should appear");
-    CLOG_WARN("Level", "This WARN should be hidden");
-    CLOG_INFO("Level", "This INFO should be hidden");
-    
-    clogger::Logger::setLevel(clogger::Level::WARN);
-    CLOG_ERROR("Level", "ERROR and WARN should appear");
-    CLOG_WARN("Level", "WARN should appear");
-    CLOG_INFO("Level", "This INFO should be hidden");
-    
-    clogger::Logger::setLevel(clogger::Level::INFO);
-    CLOG_ERROR("Level", "ERROR, WARN, and INFO should appear");
-    CLOG_WARN("Level", "WARN should appear");
-    CLOG_INFO("Level", "INFO should appear");
-    CLOG_DEBUG("Level", "This DEBUG should be hidden");
+    // Note: With compile-time CLOG_LEVEL=5 (TRACE), all messages below are visible
+    // Runtime level filtering has been replaced with compile-time filtering for better performance
+    CLOG_ERROR("Level", "ERROR level message (always visible)");
+    CLOG_WARN("Level", "WARN level message (visible at TRACE level)");
+    CLOG_INFO("Level", "INFO level message (visible at TRACE level)");
+    CLOG_DEBUG("Level", "DEBUG level message (visible at TRACE level)");
+    CLOG_TRACE("Level", "TRACE level message (visible at TRACE level)");
     
     // Test tag filtering
     printf("\n--- Testing Tag Filtering ---\n");
@@ -93,8 +84,7 @@ int main() {
     printf("Database enabled: %s\n", clogger::Logger::isTagEnabled("Database") ? "Yes" : "No");
     printf("Network enabled: %s\n", clogger::Logger::isTagEnabled("Network") ? "Yes" : "No");
     
-    // Reset for final demo
-    clogger::Logger::setLevel(clogger::Level::INFO);
+    // Reset tag filters for final demo (log level is compile-time configured)
     clogger::Logger::enableAllTags();
     
     // Simulate a typical application workflow
