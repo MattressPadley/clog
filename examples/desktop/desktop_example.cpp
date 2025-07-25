@@ -2,8 +2,6 @@
 #define CLOG_LIBRARY_NAME "DesktopExample"
 
 #include <clog/log.hpp>
-#include <clog/config.hpp>
-#include <clog/platform.hpp>
 #include <thread>
 #include <chrono>
 
@@ -20,8 +18,7 @@ int main() {
     clogger::config::printConfig();
     std::cout << std::endl;
     
-    // Set log level to show all messages
-    clogger::Logger::setLevel(clogger::Level::TRACE);
+    // Log level set to TRACE at compile-time via CMake (CLOG_LEVEL=5)
     
     // Color and level format test - show all levels
     std::cout << "\n=== Color and Level Format Test ===" << std::endl;
@@ -121,24 +118,16 @@ int main() {
     
     CLOG_INFO("Demo", "Processing %d items with value %.2f, status: %s", count, value, status);
     
-    // Demonstrate different log levels
-    std::cout << "\n--- Testing different log levels ---" << std::endl;
+    // Compile-time log level demonstration
+    std::cout << "\n--- Compile-time log level (all levels visible) ---" << std::endl;
     
-    clogger::Logger::setLevel(clogger::Level::ERROR);
-    CLOG_ERROR("Level", "Only ERROR should appear");
-    CLOG_WARN("Level", "This WARN should be hidden");
-    CLOG_INFO("Level", "This INFO should be hidden");
-    
-    clogger::Logger::setLevel(clogger::Level::WARN);
-    CLOG_ERROR("Level", "ERROR and WARN should appear");
-    CLOG_WARN("Level", "WARN should appear");
-    CLOG_INFO("Level", "This INFO should be hidden");
-    
-    clogger::Logger::setLevel(clogger::Level::INFO);
-    CLOG_ERROR("Level", "ERROR, WARN, and INFO should appear");
-    CLOG_WARN("Level", "WARN should appear");
-    CLOG_INFO("Level", "INFO should appear");
-    CLOG_DEBUG("Level", "This DEBUG should be hidden");
+    // Note: With compile-time CLOG_LEVEL=5 (TRACE), all messages below are visible
+    // Runtime level filtering has been replaced with compile-time filtering for better performance
+    CLOG_ERROR("Level", "ERROR level message (always visible)");
+    CLOG_WARN("Level", "WARN level message (visible at TRACE level)");
+    CLOG_INFO("Level", "INFO level message (visible at TRACE level)");
+    CLOG_DEBUG("Level", "DEBUG level message (visible at TRACE level)");
+    CLOG_TRACE("Level", "TRACE level message (visible at TRACE level)");
     
     // Demonstrate callback functionality
     std::cout << "\n--- Testing callback functionality ---" << std::endl;
@@ -271,19 +260,17 @@ int main() {
     std::cout << "Security enabled: " << (clogger::Logger::isTagEnabled("Security") ? "Yes" : "No") << std::endl;
     std::cout << "Network enabled: " << (clogger::Logger::isTagEnabled("Network") ? "Yes" : "No") << std::endl;
     
-    // Demonstrate tag filtering with different log levels
-    std::cout << "\n6. Tag filtering combined with log levels:" << std::endl;
-    clogger::Logger::setLevel(clogger::Level::WARN);  // Only ERROR and WARN
+    // Demonstrate tag filtering with compile-time log levels
+    std::cout << "\n6. Tag filtering (all log levels visible due to compile-time TRACE level):" << std::endl;
     clogger::Logger::enableAllTags();              // Allow all tags
     clogger::Logger::disableTag("Debug");          // But disable Debug tag
     
-    CLOG_ERROR("System", "Critical error occurred");           // Should appear (ERROR level, tag allowed)
-    CLOG_WARN("System", "Warning message");                    // Should appear (WARN level, tag allowed)
-    CLOG_INFO("System", "Info message");                       // Should NOT appear (INFO > WARN level)
-    CLOG_ERROR("Debug", "Debug error");                        // Should NOT appear (tag disabled)
+    CLOG_ERROR("System", "Critical error occurred (tag allowed)");           // Should appear
+    CLOG_WARN("System", "Warning message (tag allowed)");                    // Should appear
+    CLOG_INFO("System", "Info message (tag allowed)");                       // Should appear (compile-time TRACE level)
+    CLOG_ERROR("Debug", "Debug error (tag disabled)");                        // Should NOT appear (tag disabled)
     
-    // Reset for next demo
-    clogger::Logger::setLevel(clogger::Level::INFO);
+    // Reset tag filters for next demo
     clogger::Logger::enableAllTags();
     
     std::cout << "\n--- Simulating real-world usage ---" << std::endl;
