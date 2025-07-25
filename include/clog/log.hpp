@@ -2,6 +2,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 #include "config.hpp"
 
 // Platform detection handled by platform.hpp - include it for platform defines
@@ -182,9 +183,7 @@ private:
 #define CLOG_TRACE(tag, fmt, ...)   clogger::Logger::trace_with_library(tag, CLOG_LIBRARY_NAME, fmt, ##__VA_ARGS__)
 
 // Compile-time level filtering
-#ifndef CLOG_LEVEL
-    #define CLOG_LEVEL 3  // Default to INFO
-#endif
+// CLOG_LEVEL default is handled by config.hpp with debug/release awareness
 
 #if CLOG_LEVEL < 1
     #undef CLOG_ERROR
@@ -233,7 +232,7 @@ inline void Logger::log(Level level, const char* tag, const char* format, ...) {
     if (!checkTagFilter(tag)) return;
 #endif
     
-    char buffer[512];  // Fixed size for embedded compatibility
+    char buffer[CLOG_BUFFER_SIZE];  // Configurable size for embedded compatibility
     va_list args;
     va_start(args, format);
     vsnprintf(buffer, sizeof(buffer), format, args);
@@ -335,7 +334,7 @@ inline void Logger::error_with_library(const char* tag, const char* libraryName,
 #endif
     va_list args;
     va_start(args, format);
-    char buffer[512];
+    char buffer[CLOG_BUFFER_SIZE];
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     output(Level::ERROR, tag, buffer, libraryName);
@@ -348,7 +347,7 @@ inline void Logger::warn_with_library(const char* tag, const char* libraryName, 
 #endif
     va_list args;
     va_start(args, format);
-    char buffer[512];
+    char buffer[CLOG_BUFFER_SIZE];
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     output(Level::WARN, tag, buffer, libraryName);
@@ -361,7 +360,7 @@ inline void Logger::info_with_library(const char* tag, const char* libraryName, 
 #endif
     va_list args;
     va_start(args, format);
-    char buffer[512];
+    char buffer[CLOG_BUFFER_SIZE];
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     output(Level::INFO, tag, buffer, libraryName);
@@ -374,7 +373,7 @@ inline void Logger::debug_with_library(const char* tag, const char* libraryName,
 #endif
     va_list args;
     va_start(args, format);
-    char buffer[512];
+    char buffer[CLOG_BUFFER_SIZE];
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     output(Level::DEBUG, tag, buffer, libraryName);
@@ -387,7 +386,7 @@ inline void Logger::trace_with_library(const char* tag, const char* libraryName,
 #endif
     va_list args;
     va_start(args, format);
-    char buffer[512];
+    char buffer[CLOG_BUFFER_SIZE];
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     output(Level::TRACE, tag, buffer, libraryName);

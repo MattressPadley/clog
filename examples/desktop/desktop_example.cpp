@@ -2,8 +2,6 @@
 #define CLOG_LIBRARY_NAME "DesktopExample"
 
 #include <clog/log.hpp>
-#include <clog/config.hpp>
-#include <clog/platform.hpp>
 #include <thread>
 #include <chrono>
 
