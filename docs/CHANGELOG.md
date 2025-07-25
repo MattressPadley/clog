@@ -1,5 +1,19 @@
 # Changelog
 
+# 0.1.1 (2025-07-25)
+
+## Features
+- Added nested submodule support with comprehensive documentation
+- Added compile-time platform configuration via CMake
+
+## Bug Fixes
+- Fixed AUTO_DETECT fallback logic for platform detection
+
+## Improvements
+- Enhanced CMake platform configuration with comprehensive integration tests
+- Updated documentation to recommend CMake configuration for library naming
+
+
 # 0.1.0 (2025-07-24)
 
 ## Features
