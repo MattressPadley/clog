@@ -1,6 +1,6 @@
 # CLog - Unified Logging Library
 
-A lightweight, header-only C++ logging library for embedded and desktop platforms.
+A unified header-only C++ logging library with tag-based filtering, library identification, and seamless embedded-to-desktop portability.
 
 ## Quick Start
 
