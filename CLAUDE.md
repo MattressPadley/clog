@@ -143,7 +143,30 @@ CLog supports compile-time library identification for nested dependency scenario
 
 #### Compile-Time Library Identification
 
-Libraries define their name at compile time using a preprocessor macro before including the header:
+**Recommended: CMake Configuration**
+
+The preferred way to set library names is through CMake's `target_compile_definitions`:
+
+```cmake
+# In MyDatabaseLib/CMakeLists.txt
+add_library(database_lib database.cpp)
+target_compile_definitions(database_lib PRIVATE CLOG_LIBRARY_NAME="DatabaseLib")
+target_link_libraries(database_lib PRIVATE clog::clog)
+```
+
+```cpp
+// In MyDatabaseLib/src/database.cpp
+#include <clog/log.hpp>  // Library name already configured via CMake
+
+void initDatabase() {
+    // No initialization call needed - library name is embedded at compile time
+    CLOG_INFO("Init", "Database library initialized");  // [DatabaseLib][Init]: message
+}
+```
+
+**Alternative: Preprocessor Define**
+
+For projects not using CMake or when manual control is needed:
 
 ```cpp
 // In MyDatabaseLib/src/database.cpp
@@ -151,7 +174,6 @@ Libraries define their name at compile time using a preprocessor macro before in
 #include <clog/log.hpp>
 
 void initDatabase() {
-    // No initialization call needed - library name is embedded at compile time
     CLOG_INFO("Init", "Database library initialized");  // [DatabaseLib][Init]: message
 }
 ```
@@ -163,6 +185,7 @@ void initDatabase() {
 - ✅ Perfect for header-only libraries
 - ✅ Eliminates global state issues between libraries
 - ✅ Works correctly with same-thread multi-library scenarios
+- ✅ CMake approach integrates with build system configuration
 
 
 #### Library Tagging API
@@ -194,10 +217,19 @@ clogger::Logger::clearAllLibraryColors();
 - **Performance-Critical Code**: Compile-time approach eliminates runtime overhead
 
 #### Integration Workflow
+
+**CMake-based setup (recommended):**
+
+```cmake
+# In MyDatabaseLib/CMakeLists.txt
+add_library(database_lib database.cpp)
+target_compile_definitions(database_lib PRIVATE CLOG_LIBRARY_NAME="DatabaseLib")
+target_link_libraries(database_lib PRIVATE clog::clog)
+```
+
 ```cpp
-// In MyDatabaseLib/src/database.cpp
-#define CLOG_LIBRARY_NAME "DatabaseLib"
-#include <clog/log.hpp>
+// In MyDatabaseLib/src/database.cpp  
+#include <clog/log.hpp>  // Library name set via CMake
 
 void initDatabase() {
     CLOG_INFO("Init", "Database library initialized");  // Shows [DatabaseLib][Init]: message
@@ -206,7 +238,15 @@ void initDatabase() {
 void queryData() {
     CLOG_DEBUG("Query", "Executing SELECT * FROM users");  // Shows [DatabaseLib][Query]: message
 }
+```
 
+```cmake
+# In parent application CMakeLists.txt
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE database_lib clog::clog)
+```
+
+```cpp
 // In parent application main.cpp
 int main() {
     // Enable library identification  
@@ -271,10 +311,17 @@ bool enabled = clogger::Logger::isTagEnabled("Database");
 ```
 
 **Library tagging for nested dependencies:**
+
+```cmake
+# In library CMakeLists.txt (recommended)
+add_library(my_lib src/network.cpp)
+target_compile_definitions(my_lib PRIVATE CLOG_LIBRARY_NAME="MyLib")
+target_link_libraries(my_lib PRIVATE clog::clog)
+```
+
 ```cpp
-// In library code (during library compilation)
-#define CLOG_LIBRARY_NAME "MyLib"
-#include <clog/log.hpp>
+// In library code
+#include <clog/log.hpp>  // Library name set via CMake
 // No initialization needed - library name embedded at compile time
 
 // In parent application - control library tag visibility
@@ -298,24 +345,27 @@ CLOG_INFO("Database", "Connection established");
 
 ### Configuration
 
-Compile-time configuration via preprocessor defines:
+**Recommended: CMake Configuration**
 
-**Core Configuration:**
-- `CLOG_LEVEL` - Set maximum log level (0-5)
-- `CLOG_BUFFER_SIZE` - Message buffer size (default: 256 embedded, 512 desktop)
-- `CLOG_ENABLE_COLORS` - Enable color output (default: desktop only)
-- `CLOG_ENABLE_ASSERTS` - Enable assertion macros (default: enabled in debug builds)
+The preferred way to configure CLog is through CMake's `target_compile_definitions`:
 
-**Library Identification:**
-- `CLOG_LIBRARY_NAME` - Define library name for compile-time identification (e.g., `#define CLOG_LIBRARY_NAME "MyLib"`)
-- `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum library name length (default: 32)
-- `CLOG_MAX_LIBRARY_COLORS` - Maximum number of library colors (default: 16)
+```cmake
+# Configure library with CMake (recommended)
+add_library(my_library src/database.cpp)
+target_compile_definitions(my_library PRIVATE
+    CLOG_LIBRARY_NAME="DatabaseLib"    # Library identification
+    CLOG_LEVEL=4                       # Debug level
+    CLOG_BUFFER_SIZE=512               # Buffer size
+    CLOG_ENABLE_TAG_FILTERING=1        # Enable tag filtering
+    CLOG_MAX_TAG_FILTERS=32            # Increase tag filter capacity
+)
+target_link_libraries(my_library PRIVATE clog::clog)
+```
 
-**Tag Filtering:**  
-- `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
-- `CLOG_MAX_TAG_FILTERS` - Maximum number of tag filters (default: 16)
+**Alternative: Preprocessor Defines**
 
-**Usage Examples:**
+For projects not using CMake or when manual control is needed:
+
 ```cpp
 // Library with compile-time identification
 #define CLOG_LIBRARY_NAME "DatabaseLib"
@@ -326,6 +376,23 @@ Compile-time configuration via preprocessor defines:
 #define CLOG_BUFFER_SIZE 128
 #include <clog/log.hpp>
 ```
+
+**Available Configuration Options:**
+
+**Core Configuration:**
+- `CLOG_LEVEL` - Set maximum log level (0-5)
+- `CLOG_BUFFER_SIZE` - Message buffer size (default: 256 embedded, 512 desktop)
+- `CLOG_ENABLE_COLORS` - Enable color output (default: desktop only)
+- `CLOG_ENABLE_ASSERTS` - Enable assertion macros (default: enabled in debug builds)
+
+**Library Identification:**
+- `CLOG_LIBRARY_NAME` - Define library name for compile-time identification
+- `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum library name length (default: 32)
+- `CLOG_MAX_LIBRARY_COLORS` - Maximum number of library colors (default: 16)
+
+**Tag Filtering:**  
+- `CLOG_ENABLE_TAG_FILTERING` - Enable/disable tag filtering feature (default: enabled)
+- `CLOG_MAX_TAG_FILTERS` - Maximum number of tag filters (default: 16)
 
 ### Testing Structure
 
