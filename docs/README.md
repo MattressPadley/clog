@@ -19,21 +19,32 @@ CLog is a lightweight, header-only C++ logging library designed for cross-platfo
 ### Basic Usage
 
 ```cpp
+// Configure at compile time (recommended approach)
+#define CLOG_LEVEL 4  // DEBUG level - filters out TRACE at compile time
 #include <clog/log.hpp>
 
 int main() {
-    // Set log level
-    clogger::Logger::setLevel(clogger::Level::DEBUG);
-    
-    // Basic logging
+    // No setup needed - log level configured at compile time
     CLOG_ERROR("MyApp", "Something went wrong: %d", error_code);
     CLOG_WARN("MyApp", "Warning condition detected");
     CLOG_INFO("MyApp", "Application started");
     CLOG_DEBUG("MyApp", "Debug info: %s", debug_string);
-    CLOG_TRACE("MyApp", "Detailed trace information");
+    CLOG_TRACE("MyApp", "This is compiled out (level 5 > CLOG_LEVEL 4)");
     
     return 0;
 }
+```
+
+### CMake Configuration (Preferred)
+
+```cmake
+# Configure via CMake for better build system integration
+add_executable(my_app main.cpp)
+target_compile_definitions(my_app PRIVATE 
+    CLOG_LEVEL=4                    # Debug level
+    CLOG_PLATFORM=DESKTOP           # Explicit platform (optional)
+)
+target_link_libraries(my_app PRIVATE clog::clog)
 ```
 
 ### Integration with Parent Applications
@@ -49,7 +60,7 @@ void myLogCallback(clogger::Level level, const char* tag, const char* message) {
 int main() {
     // Register callback to capture all library logging
     clogger::Logger::setCallback(myLogCallback);
-    clogger::Logger::setLevel(clogger::Level::DEBUG);
+    // Note: Log level configured at compile time via CLOG_LEVEL
     
     // All CLOG_* calls will now go through your callback
     CLOG_INFO("System", "Library integrated successfully");
@@ -60,25 +71,40 @@ int main() {
 
 ## Platform Configuration
 
-CLog now supports explicit platform configuration to eliminate build warnings and ensure reliable cross-platform operation.
+CLog uses simplified platform detection that defaults to desktop behavior and can be overridden via CMake for embedded platforms. This approach eliminates complex auto-detection and provides reliable cross-platform operation.
 
 ### Supported Platforms
 
-- **Desktop**: Windows, Linux, macOS (default)
+- **Desktop**: Windows, Linux, macOS (default behavior)
 - **Arduino**: All Arduino-compatible boards
 - **ESP32/ESP8266**: Both Arduino framework and ESP-IDF
 - **Raspberry Pi Pico**: RP2040 with Arduino framework or Pico SDK
 
-### Platform Configuration API
+### CMake Platform Configuration (Recommended)
+
+```cmake
+# Set platform at build time via CMake
+set(CLOG_PLATFORM "RP2040_SDK" CACHE STRING "CLog target platform")
+
+# Or pass as command-line argument
+# cmake -DCLOG_PLATFORM=ESP32 ..
+
+# Available platform values:
+# AUTO_DETECT (default), ARDUINO, ESP32, ESP8266, 
+# RP2040_ARDUINO, RP2040_SDK, ESP_IDF,
+# DESKTOP, WINDOWS, LINUX, MACOS
+```
+
+### Runtime Platform Configuration (Alternative)
 
 ```cpp
-// Available platforms
+// Available platforms (for runtime configuration)
 enum class Platform {
     ARDUINO, ESP32, ESP8266, RP2040_ARDUINO, RP2040_SDK,
     ESP_IDF, DESKTOP, WINDOWS, LINUX, MACOS, AUTO_DETECT
 };
 
-// Explicit platform configuration (recommended for embedded)
+// Explicit platform configuration (when CMake config not available)
 clogger::Logger::init(clogger::Platform::RP2040_SDK);
 
 // Or set platform separately
@@ -91,13 +117,24 @@ clogger::Platform current = clogger::Logger::getPlatform();
 
 ### Platform-Specific Usage
 
-**RP2040 with Pico SDK:**
+**RP2040 with Pico SDK (CMake approach):**
+```cmake
+# In CMakeLists.txt
+add_executable(pico_app main.cpp)
+target_compile_definitions(pico_app PRIVATE 
+    CLOG_LEVEL=4
+    CLOG_PLATFORM_RP2040_SDK=1
+    CLOG_HAS_COLOR_SUPPORT=0
+    CLOG_HAS_PRINTF_SUPPORT=1
+)
+target_link_libraries(pico_app PRIVATE clog::clog pico_stdlib)
+```
+
 ```cpp
 #include <clog/log.hpp>
 
 int main() {
-    // Explicitly configure for RP2040 SDK to avoid build warnings
-    clogger::Logger::init(clogger::Platform::RP2040_SDK);
+    // No platform configuration needed - configured via CMake
     CLOG_INFO("App", "RP2040 application started");
     return 0;
 }
@@ -105,10 +142,11 @@ int main() {
 
 **Desktop Development (default):**
 ```cpp
+// Desktop defaults: colors enabled, std::cout output
 #include <clog/log.hpp>
 
 int main() {
-    // No platform configuration needed - defaults to desktop
+    // No configuration needed - defaults to desktop behavior
     CLOG_INFO("App", "Desktop application started");
     return 0;
 }
@@ -180,44 +218,73 @@ build_flags =
 
 ## Configuration
 
-### Compile-time Configuration
+CLog is designed for compile-time configuration to achieve optimal performance. The recommended approach is to configure via CMake, with preprocessor defines as an alternative.
+
+### CMake Configuration (Recommended)
+
+```cmake
+# Complete configuration example
+add_executable(my_app main.cpp)
+target_compile_definitions(my_app PRIVATE 
+    # Core configuration
+    CLOG_LEVEL=4                        # 0=OFF, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=TRACE
+    CLOG_BUFFER_SIZE=512               # Message buffer size
+    
+    # Platform configuration (optional - defaults to desktop)
+    CLOG_PLATFORM_DESKTOP=1            # Explicit desktop platform
+    CLOG_HAS_COLOR_SUPPORT=1           # Enable colored output
+    CLOG_HAS_PRINTF_SUPPORT=0          # Use std::cout (not printf)
+    
+    # Feature configuration
+    CLOG_ENABLE_TAG_FILTERING=1        # Enable tag filtering (default: enabled)
+    CLOG_MAX_TAG_FILTERS=16            # Maximum number of tag filters
+    CLOG_MAX_LIBRARY_COLORS=16         # Maximum number of library colors
+    CLOG_MAX_LIBRARY_NAME_LENGTH=32    # Maximum library name length
+    CLOG_ENABLE_ASSERTS=1              # Enable assertion macros
+)
+target_link_libraries(my_app PRIVATE clog::clog)
+```
+
+### Preprocessor Configuration (Alternative)
 
 ```cpp
 // Define before including clog/log.hpp
-#define CLOG_LEVEL 4              // 0=OFF, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=TRACE
+#define CLOG_LEVEL 4              // DEBUG level
 #define CLOG_BUFFER_SIZE 512      // Message buffer size
 #define CLOG_MAX_TAG_FILTERS 16   // Maximum number of tag filters
-#define CLOG_ENABLE_TAG_FILTERING 1 // Enable tag filtering (default: enabled)
-#define CLOG_MAX_LIBRARY_COLORS 16  // Maximum number of library colors
-#define CLOG_MAX_LIBRARY_NAME_LENGTH 32 // Maximum library name length
-#define CLOG_ENABLE_ASSERTS 1     // Enable assertion macros (default: debug builds only)
+#define CLOG_ENABLE_TAG_FILTERING 1 // Enable tag filtering
 #include <clog/log.hpp>
 ```
 
-### Build System Configuration
+### PlatformIO Configuration
 
-**CMake:**
-```cmake
-target_compile_definitions(your_target PRIVATE 
-    CLOG_LEVEL=4
-    CLOG_BUFFER_SIZE=256
-    CLOG_MAX_TAG_FILTERS=16
-    CLOG_ENABLE_TAG_FILTERING=1
-    CLOG_MAX_LIBRARY_COLORS=16
-    CLOG_MAX_LIBRARY_NAME_LENGTH=32
-)
-```
-
-**PlatformIO:**
 ```ini
+[env:my_env]
 build_flags = 
     -DCLOG_LEVEL=4
     -DCLOG_BUFFER_SIZE=256
-    -DCLOG_MAX_TAG_FILTERS=16
-    -DCLOG_ENABLE_TAG_FILTERING=1
-    -DCLOG_MAX_LIBRARY_COLORS=16
-    -DCLOG_MAX_LIBRARY_NAME_LENGTH=32
+    -DCLOG_PLATFORM_ESP32=1
+    -DCLOG_HAS_COLOR_SUPPORT=0
+    -DCLOG_HAS_PRINTF_SUPPORT=1
 ```
+
+### Available Configuration Options
+
+**Core Settings:**
+- `CLOG_LEVEL` - Maximum log level (0-5), messages above this are compiled out
+- `CLOG_BUFFER_SIZE` - Buffer size for formatted messages
+- `CLOG_ENABLE_ASSERTS` - Enable/disable assertion macros
+
+**Platform Settings:**
+- `CLOG_PLATFORM_*` - Explicit platform selection (see platform section)
+- `CLOG_HAS_COLOR_SUPPORT` - Enable colored console output
+- `CLOG_HAS_PRINTF_SUPPORT` - Use printf vs std::cout for output
+
+**Feature Settings:**
+- `CLOG_ENABLE_TAG_FILTERING` - Enable tag-based filtering system
+- `CLOG_MAX_TAG_FILTERS` - Maximum number of simultaneous tag filters
+- `CLOG_MAX_LIBRARY_COLORS` - Maximum library color configurations
+- `CLOG_MAX_LIBRARY_NAME_LENGTH` - Maximum length for library names
 
 ## API Reference
 
@@ -243,23 +310,26 @@ CLOG_TRACE(tag, format, ...)   // Trace level
 ### Logger Methods
 
 ```cpp
-// Set global log level
-clogger::Logger::setLevel(clogger::Level::DEBUG);
+// Log level configuration (compile-time preferred)
+// Note: setLevel() still available for runtime adjustment, but compile-time filtering
+// via CLOG_LEVEL provides better performance by eliminating unused code
+clogger::Logger::setLevel(clogger::Level::DEBUG);  // Runtime level (if needed)
+clogger::Level level = clogger::Logger::getLevel(); // Get current runtime level
 
-// Get current log level
-clogger::Level level = clogger::Logger::getLevel();
+// Callback integration
+clogger::Logger::setCallback(myCallback);     // Set callback for message handling
+clogger::Logger::enableDirectOutput(true);   // Enable/disable direct console output
 
-// Set callback for message handling
-clogger::Logger::setCallback(myCallback);
+// Platform configuration (optional - defaults to desktop)
+clogger::Logger::init();                           // Use default platform detection
+clogger::Logger::init(clogger::Platform::RP2040_SDK); // Explicit platform
+clogger::Logger::setPlatform(clogger::Platform::ESP32); // Set platform separately
 
-// Enable/disable direct output
-clogger::Logger::enableDirectOutput(true);
-
-// Platform-specific initialization
-clogger::Logger::init();
-
-// Or set platform explicitly (recommended for embedded platforms)
-clogger::Logger::init(clogger::Platform::RP2040_SDK);
+// Platform queries
+clogger::Platform current = clogger::Logger::getPlatform();
+bool isDesktop = clogger::Logger::isDesktopPlatform();
+bool isEmbedded = clogger::Logger::isEmbeddedPlatform();
+bool hasColors = clogger::Logger::hasColorSupport();
 ```
 
 ### Tag Filtering
@@ -297,10 +367,12 @@ clogger::Logger::clearTagFilters();
 #### Example Usage
 
 ```cpp
+// Configure compile-time log level
+#define CLOG_LEVEL 4  // DEBUG level
 #include <clog/log.hpp>
 
 int main() {
-    clogger::Logger::setLevel(clogger::Level::DEBUG);
+    // No setLevel() call needed - configured at compile time
     
     // Example 1: Whitelist mode - only show Database and Security logs
     clogger::Logger::enableTag("Database");
@@ -316,6 +388,7 @@ int main() {
     
     CLOG_INFO("App", "Application started");           // ✓ Shown
     CLOG_INFO("Debug", "Verbose debug info");          // ✗ Filtered out
+    CLOG_TRACE("Network", "Detailed trace");           // ✗ May be compiled out if CLOG_LEVEL < 5
     
     // Example 3: Check tag status programmatically
     if (clogger::Logger::isTagEnabled("Performance")) {
@@ -328,12 +401,31 @@ int main() {
 
 #### Integration with Log Levels
 
-Tag filtering and log level filtering work together:
-1. First, the log level is checked (e.g., DEBUG > INFO gets filtered)
-2. Then, if the level passes, the tag filter is checked
-3. Only messages that pass both filters are logged
+Tag filtering and log level filtering work together with a two-stage approach:
 
-This allows for fine-grained control: you can set a high log level (like DEBUG) but only enable specific tags you're interested in.
+**Compile-time filtering (CLOG_LEVEL):**
+1. Messages above the compile-time level are completely eliminated from the binary
+2. No runtime overhead for filtered-out levels
+
+**Runtime filtering (tag filtering + runtime level):**
+1. For messages that survive compile-time filtering, runtime level is checked
+2. Then tag filters are applied
+3. Only messages passing both checks are logged
+
+**Example:**
+```cpp
+#define CLOG_LEVEL 4  // Compile out TRACE (level 5)
+// ... 
+clogger::Logger::setLevel(clogger::Level::WARN);  // Runtime level
+clogger::Logger::enableTag("Database");
+
+CLOG_ERROR("Database", "Error");     // ✓ Shown (compiled, level passes, tag enabled)
+CLOG_INFO("Database", "Info");       // ✗ Hidden (compiled, level filtered at runtime)
+CLOG_DEBUG("Network", "Debug");      // ✗ Hidden (compiled, level + tag filtered)
+CLOG_TRACE("Database", "Trace");     // ✗ Not compiled (eliminated at compile time)
+```
+
+This provides optimal performance through compile-time elimination while maintaining runtime flexibility.
 
 ### Tag Color Configuration
 
@@ -553,17 +645,38 @@ See the `examples/` directory for complete, runnable examples.
 
 ## Performance Considerations
 
+### Compile-time Optimization
+
+CLog's primary performance advantage comes from compile-time filtering:
+
+```cpp
+#define CLOG_LEVEL 2  // Only ERROR and WARN levels
+#include <clog/log.hpp>
+
+// These are completely eliminated from the binary:
+CLOG_INFO("App", "This code doesn't exist in the binary");
+CLOG_DEBUG("App", "Neither does this");
+CLOG_TRACE("App", "Or this");
+
+// Only these generate code:
+CLOG_ERROR("App", "Error message");  // ✓ Compiled
+CLOG_WARN("App", "Warning message"); // ✓ Compiled
+```
+
 ### Embedded Systems
 
-- Default buffer size: 256 bytes
-- Fixed-size buffers prevent dynamic allocation
-- Compile-time level filtering removes unused code
-- Platform-specific optimizations for Arduino/ESP32
+- **Default buffer size**: 256 bytes (configurable via `CLOG_BUFFER_SIZE`)
+- **Fixed-size buffers**: No dynamic allocation, stack-based formatting
+- **Compile-time filtering**: Unused log levels generate zero code
+- **Platform detection**: CMake-based configuration avoids runtime detection overhead
+- **Minimal footprint**: Header-only design with embedded-specific optimizations
 
 ### Desktop Systems
 
-- Default buffer size: 512 bytes
-- Color-coded console output
+- **Default buffer size**: 1024 bytes (larger for desktop workloads)
+- **Color support**: ANSI escape codes for level and tag coloring
+- **std::cout output**: Uses C++ streams instead of printf for desktop platforms
+- **Full feature set**: All tag filtering, library identification, and color features enabled
 
 ## Integration with Slide Kick
 
