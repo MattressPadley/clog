@@ -386,6 +386,58 @@ CLOG_INFO("Database", "Connection established");
 - **Arduino IDE**: Header-only, just include `<clog/log.hpp>`
 - **Just**: Uses `justfile` for development commands
 
+### Nested Submodule Usage
+
+CLog is frequently used as a submodule in multiple nested projects. The recommended pattern avoids duplicate target definitions by using `find_package()` with fallback to `add_subdirectory()`:
+
+**Recommended CMake Pattern:**
+
+```cmake
+# In any project that needs clog (library or application)
+find_package(clog QUIET)
+if(NOT clog_FOUND)
+    add_subdirectory(path/to/clog)
+endif()
+
+# Then link as usual
+target_link_libraries(your_target clog::clog)
+```
+
+**Example Project Structure:**
+```
+MyProject/
+├── external/clog/           # clog submodule
+├── MyLibrary/
+│   ├── external/clog/       # same clog submodule
+│   └── CMakeLists.txt       # uses find_package fallback pattern
+└── CMakeLists.txt           # uses find_package fallback pattern
+```
+
+**How It Works:**
+
+1. **First include**: `find_package(clog QUIET)` fails, `add_subdirectory()` runs, creates `clog::clog` target
+2. **Subsequent includes**: `find_package(clog QUIET)` succeeds (finds existing target), `add_subdirectory()` is skipped
+3. **No duplicate targets**: CMake automatically handles the deduplication
+
+**Benefits:**
+- ✅ No duplicate target definition errors
+- ✅ Works with any nesting depth
+- ✅ Leverages CMake's built-in export/import system
+- ✅ Automatic deduplication
+- ✅ Header-only library means no duplicate compilation
+
+**Alternative Patterns:**
+
+If you prefer explicit control, you can add a target guard to your CMakeLists.txt:
+
+```cmake
+# At the top of any CMakeLists.txt that includes clog
+if(TARGET clog::clog)
+    return()
+endif()
+add_subdirectory(path/to/clog)
+```
+
 ### Configuration
 
 **Recommended: CMake Configuration**

@@ -132,6 +132,36 @@ add_subdirectory(external/clog)
 target_link_libraries(your_target clogger::clog)
 ```
 
+### Nested Dependencies
+
+When using CLog as a submodule in multiple nested projects (e.g., a library that uses CLog is itself used by an application that also uses CLog), use the following pattern to avoid duplicate target definitions:
+
+```cmake
+# Recommended pattern for nested submodule usage
+find_package(clog QUIET)
+if(NOT clog_FOUND)
+    add_subdirectory(external/clog)
+endif()
+
+target_link_libraries(your_target clog::clog)
+```
+
+**Example Scenario:**
+- Your main application includes CLog as a submodule
+- Your application also uses MyDatabaseLib, which includes CLog as a submodule  
+- Both projects use the `find_package()` fallback pattern
+
+**What happens:**
+1. First project to configure finds `clog_FOUND=false`, runs `add_subdirectory()`
+2. Second project finds `clog_FOUND=true`, skips `add_subdirectory()`
+3. Both projects link to the same `clog::clog` target without conflicts
+
+**Benefits:**
+- No duplicate target definition errors
+- Automatic deduplication through CMake's export/import system
+- Works with any level of nesting
+- Compatible with existing CMake workflows
+
 ### PlatformIO Integration
 
 ```ini
