@@ -85,8 +85,8 @@ int main() {
     CLOG_INFO("App", "Desktop application started");
     
     // Configure tag colors for better visual distinction
-    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("Database", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::CLOG_BRIGHT_MAGENTA);
     
     CLOG_INFO("Database", "This appears in cyan");
     CLOG_INFO("Network", "This appears in magenta");

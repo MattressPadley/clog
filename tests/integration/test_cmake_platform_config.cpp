@@ -104,7 +104,7 @@ private:
         
         // Test AUTO_DETECT fallback behavior
         clogger::Platform original_platform = clogger::Logger::getPlatform();
-        clogger::Logger::setPlatform(clogger::Platform::AUTO_DETECT);
+        clogger::Logger::setPlatform(clogger::Platform::CLOG_AUTO_DETECT);
         
         // Test that AUTO_DETECT properly falls back to compile-time detection
         bool desktop_detected = clogger::Logger::isDesktopPlatform();
@@ -171,7 +171,7 @@ private:
         bool original_embedded = clogger::Logger::isEmbeddedPlatform();
         
         // Try to override with runtime configuration
-        clogger::Logger::setPlatform(clogger::Platform::ESP32);
+        clogger::Logger::setPlatform(clogger::Platform::CLOG_ESP32);
         
         // CMake configuration should still take priority
         bool after_runtime_desktop = clogger::Logger::isDesktopPlatform();
@@ -194,7 +194,7 @@ private:
         #endif
         
         // Reset to AUTO_DETECT
-        clogger::Logger::setPlatform(clogger::Platform::AUTO_DETECT);
+        clogger::Logger::setPlatform(clogger::Platform::CLOG_AUTO_DETECT);
     }
 };
 

@@ -43,9 +43,9 @@ set(CLOG_PLATFORM "RP2040_SDK" CACHE STRING "CLog target platform")
 # cmake -DCLOG_PLATFORM=ESP32 ..
 
 # Available platform values:
-# AUTO_DETECT (default), ARDUINO, ESP32, ESP8266, 
-# RP2040_ARDUINO, RP2040_SDK, ESP_IDF,
-# DESKTOP, WINDOWS, LINUX, MACOS
+# CLOG_AUTO_DETECT (default), CLOG_ARDUINO, CLOG_ESP32, CLOG_ESP8266, 
+# CLOG_RP2040_ARDUINO, CLOG_RP2040_SDK, CLOG_ESP_IDF,
+# CLOG_DESKTOP, CLOG_WINDOWS, CLOG_LINUX, CLOG_MACOS
 ```
 
 #### Runtime Configuration
@@ -53,15 +53,15 @@ set(CLOG_PLATFORM "RP2040_SDK" CACHE STRING "CLog target platform")
 ```cpp
 // Available platforms (for runtime configuration)
 enum class Platform {
-    ARDUINO, ESP32, ESP8266, RP2040_ARDUINO, RP2040_SDK,
-    ESP_IDF, DESKTOP, WINDOWS, LINUX, MACOS, AUTO_DETECT
+    CLOG_ARDUINO, CLOG_ESP32, CLOG_ESP8266, CLOG_RP2040_ARDUINO, CLOG_RP2040_SDK,
+    CLOG_ESP_IDF, CLOG_DESKTOP, CLOG_WINDOWS, CLOG_LINUX, CLOG_MACOS, CLOG_AUTO_DETECT
 };
 
 // Explicit platform configuration (when CMake config not available)
-clogger::Logger::init(clogger::Platform::RP2040_SDK);
+clogger::Logger::init(clogger::Platform::CLOG_RP2040_SDK);
 
 // Or set platform separately
-clogger::Logger::setPlatform(clogger::Platform::RP2040_SDK);
+clogger::Logger::setPlatform(clogger::Platform::CLOG_RP2040_SDK);
 clogger::Logger::init();
 
 // Query current platform
@@ -101,8 +101,8 @@ target_link_libraries(desktop_app PRIVATE clog::clog)
 
 int main() {
     // Configure colors for better visual distinction
-    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("Database", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::CLOG_BRIGHT_MAGENTA);
     
     // Full feature set available
     CLOG_INFO("App", "Desktop application started");
