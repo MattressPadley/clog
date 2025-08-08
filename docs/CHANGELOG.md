@@ -1,5 +1,16 @@
 # Changelog
 
+# 0.1.4 (2025-08-08)
+
+Looking at these commits, I'll format them into a clean changelog:
+
+## Bug Fixes
+- Fixed macro naming conflicts with Arduino platform
+
+## Improvements
+- Updated documentation to reflect new CLOG_ prefixed enum API
+
+
 # 0.1.3 (2025-07-25)
 
 ## Improvements
