@@ -20,37 +20,37 @@ enum class Level {
 };
 
 enum class Color {
-    DEFAULT = 0,
-    BLACK,
-    RED,
-    GREEN,
-    YELLOW,
-    BLUE,
-    MAGENTA,
-    CYAN,
-    WHITE,
-    BRIGHT_BLACK,
-    BRIGHT_RED,
-    BRIGHT_GREEN,
-    BRIGHT_YELLOW,
-    BRIGHT_BLUE,
-    BRIGHT_MAGENTA,
-    BRIGHT_CYAN,
-    BRIGHT_WHITE
+    CLOG_DEFAULT = 0,
+    CLOG_BLACK,
+    CLOG_RED,
+    CLOG_GREEN,
+    CLOG_YELLOW,
+    CLOG_BLUE,
+    CLOG_MAGENTA,
+    CLOG_CYAN,
+    CLOG_WHITE,
+    CLOG_BRIGHT_BLACK,
+    CLOG_BRIGHT_RED,
+    CLOG_BRIGHT_GREEN,
+    CLOG_BRIGHT_YELLOW,
+    CLOG_BRIGHT_BLUE,
+    CLOG_BRIGHT_MAGENTA,
+    CLOG_BRIGHT_CYAN,
+    CLOG_BRIGHT_WHITE
 };
 
 enum class Platform {
-    ARDUINO,
-    ESP32,
-    ESP8266,
-    RP2040_ARDUINO,
-    RP2040_SDK,
-    ESP_IDF,
-    DESKTOP,
-    WINDOWS,
-    LINUX,
-    MACOS,
-    AUTO_DETECT  // Default: attempt automatic detection
+    CLOG_ARDUINO,
+    CLOG_ESP32,
+    CLOG_ESP8266,
+    CLOG_RP2040_ARDUINO,
+    CLOG_RP2040_SDK,
+    CLOG_ESP_IDF,
+    CLOG_DESKTOP,
+    CLOG_WINDOWS,
+    CLOG_LINUX,
+    CLOG_MACOS,
+    CLOG_AUTO_DETECT  // Default: attempt automatic detection
 };
 
 class Logger {
@@ -213,7 +213,7 @@ namespace clogger {
 inline Level Logger::currentLevel = Level::INFO;
 inline Logger::Callback Logger::logCallback = nullptr;
 inline bool Logger::directOutput = true;
-inline Platform Logger::currentPlatform = Platform::DESKTOP;
+inline Platform Logger::currentPlatform = Platform::CLOG_DESKTOP;
 inline Logger::TagColor Logger::tagColors[MAX_TAG_COLORS] = {};
 
 // Library context static members
@@ -270,7 +270,7 @@ inline void Logger::output(Level level, const char* tag, const char* message, co
                 Color libraryColor = getLibraryColor(libraryName);
                 const char* libraryColorCode = colorToAnsi(libraryColor);
                 std::cout << "[";
-                if (libraryColor != Color::DEFAULT) {
+                if (libraryColor != Color::CLOG_DEFAULT) {
                     std::cout << libraryColorCode << libraryName << "\033[0m";
                 } else {
                     std::cout << libraryName;
@@ -280,7 +280,7 @@ inline void Logger::output(Level level, const char* tag, const char* message, co
             
             // Regular tag (always in brackets now)
             std::cout << "[";
-            if (tagColor != Color::DEFAULT) {
+            if (tagColor != Color::CLOG_DEFAULT) {
                 std::cout << tagColorCode << tag << "\033[0m";
             } else {
                 std::cout << tag;
@@ -447,7 +447,7 @@ inline void Logger::init() {
         #endif
     #elif !defined(CLOG_PLATFORM_ARDUINO) && !defined(CLOG_PLATFORM_ESP32) && !defined(CLOG_PLATFORM_ESP8266) && !defined(CLOG_PLATFORM_RP2040_ARDUINO) && !defined(CLOG_PLATFORM_ESP_IDF) && !defined(CLOG_PLATFORM_DESKTOP) && !defined(CLOG_PLATFORM_WINDOWS) && !defined(CLOG_PLATFORM_LINUX) && !defined(CLOG_PLATFORM_MACOS)
         // Fall back to runtime platform configuration
-        if (currentPlatform == Platform::RP2040_SDK) {
+        if (currentPlatform == Platform::CLOG_RP2040_SDK) {
             // RP2040 SDK requires stdio initialization
             #if defined(PICO_SDK_VERSION_MAJOR)
             stdio_init_all();
@@ -507,28 +507,28 @@ inline Color Logger::getTagColor(const char* tag) {
             return tagColors[i].color;
         }
     }
-    return Color::DEFAULT;
+    return Color::CLOG_DEFAULT;
 }
 
 inline const char* Logger::colorToAnsi(Color color) {
     switch (color) {
-        case Color::DEFAULT:      return "";
-        case Color::BLACK:        return "\033[30m";
-        case Color::RED:          return "\033[31m";
-        case Color::GREEN:        return "\033[32m";
-        case Color::YELLOW:       return "\033[33m";
-        case Color::BLUE:         return "\033[34m";
-        case Color::MAGENTA:      return "\033[35m";
-        case Color::CYAN:         return "\033[36m";
-        case Color::WHITE:        return "\033[37m";
-        case Color::BRIGHT_BLACK: return "\033[90m";
-        case Color::BRIGHT_RED:   return "\033[91m";
-        case Color::BRIGHT_GREEN: return "\033[92m";
-        case Color::BRIGHT_YELLOW:return "\033[93m";
-        case Color::BRIGHT_BLUE:  return "\033[94m";
-        case Color::BRIGHT_MAGENTA:return "\033[95m";
-        case Color::BRIGHT_CYAN:  return "\033[96m";
-        case Color::BRIGHT_WHITE: return "\033[97m";
+        case Color::CLOG_DEFAULT: return "";
+        case Color::CLOG_BLACK:   return "\033[30m";
+        case Color::CLOG_RED:     return "\033[31m";
+        case Color::CLOG_GREEN:   return "\033[32m";
+        case Color::CLOG_YELLOW:  return "\033[33m";
+        case Color::CLOG_BLUE:    return "\033[34m";
+        case Color::CLOG_MAGENTA: return "\033[35m";
+        case Color::CLOG_CYAN:    return "\033[36m";
+        case Color::CLOG_WHITE:   return "\033[37m";
+        case Color::CLOG_BRIGHT_BLACK: return "\033[90m";
+        case Color::CLOG_BRIGHT_RED:   return "\033[91m";
+        case Color::CLOG_BRIGHT_GREEN: return "\033[92m";
+        case Color::CLOG_BRIGHT_YELLOW:return "\033[93m";
+        case Color::CLOG_BRIGHT_BLUE:  return "\033[94m";
+        case Color::CLOG_BRIGHT_MAGENTA:return "\033[95m";
+        case Color::CLOG_BRIGHT_CYAN:  return "\033[96m";
+        case Color::CLOG_BRIGHT_WHITE: return "\033[97m";
         default: return "";
     }
 }
@@ -702,7 +702,7 @@ inline Color Logger::getLibraryColor(const char* library) {
             return libraryColors[i].color;
         }
     }
-    return Color::DEFAULT;
+    return Color::CLOG_DEFAULT;
 }
 
 } // namespace clogger
