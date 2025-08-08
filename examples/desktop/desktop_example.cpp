@@ -33,14 +33,14 @@ int main() {
     std::cout << "Setting up custom colors for different system components..." << std::endl;
     
     // Configure colors for different system components
-    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);  
-    clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
-    clogger::Logger::setTagColor("Performance", clogger::Color::BRIGHT_YELLOW);
-    clogger::Logger::setTagColor("UI", clogger::Color::BRIGHT_GREEN);
-    clogger::Logger::setTagColor("FileSystem", clogger::Color::BLUE);
-    clogger::Logger::setTagColor("Memory", clogger::Color::CYAN);
-    clogger::Logger::setTagColor("Audio", clogger::Color::MAGENTA);
+    clogger::Logger::setTagColor("Database", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::CLOG_BRIGHT_MAGENTA);  
+    clogger::Logger::setTagColor("Security", clogger::Color::CLOG_BRIGHT_RED);
+    clogger::Logger::setTagColor("Performance", clogger::Color::CLOG_BRIGHT_YELLOW);
+    clogger::Logger::setTagColor("UI", clogger::Color::CLOG_BRIGHT_GREEN);
+    clogger::Logger::setTagColor("FileSystem", clogger::Color::CLOG_BLUE);
+    clogger::Logger::setTagColor("Memory", clogger::Color::CLOG_CYAN);
+    clogger::Logger::setTagColor("Audio", clogger::Color::CLOG_MAGENTA);
     
     std::cout << "\nNow observe how each tag appears in its configured color:" << std::endl;
     
@@ -61,20 +61,20 @@ int main() {
     std::cout << "Here's a showcase of all available colors:" << std::endl;
     
     // Showcase all available colors
-    clogger::Logger::setTagColor("RED", clogger::Color::RED);
-    clogger::Logger::setTagColor("GREEN", clogger::Color::GREEN);
-    clogger::Logger::setTagColor("YELLOW", clogger::Color::YELLOW);
-    clogger::Logger::setTagColor("BLUE", clogger::Color::BLUE);
-    clogger::Logger::setTagColor("MAGENTA", clogger::Color::MAGENTA);
-    clogger::Logger::setTagColor("CYAN", clogger::Color::CYAN);
-    clogger::Logger::setTagColor("WHITE", clogger::Color::WHITE);
-    clogger::Logger::setTagColor("B_RED", clogger::Color::BRIGHT_RED);
-    clogger::Logger::setTagColor("B_GREEN", clogger::Color::BRIGHT_GREEN);
-    clogger::Logger::setTagColor("B_YELLOW", clogger::Color::BRIGHT_YELLOW);
-    clogger::Logger::setTagColor("B_BLUE", clogger::Color::BRIGHT_BLUE);
-    clogger::Logger::setTagColor("B_MAGENTA", clogger::Color::BRIGHT_MAGENTA);
-    clogger::Logger::setTagColor("B_CYAN", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setTagColor("B_WHITE", clogger::Color::BRIGHT_WHITE);
+    clogger::Logger::setTagColor("RED", clogger::Color::CLOG_RED);
+    clogger::Logger::setTagColor("GREEN", clogger::Color::CLOG_GREEN);
+    clogger::Logger::setTagColor("YELLOW", clogger::Color::CLOG_YELLOW);
+    clogger::Logger::setTagColor("BLUE", clogger::Color::CLOG_BLUE);
+    clogger::Logger::setTagColor("MAGENTA", clogger::Color::CLOG_MAGENTA);
+    clogger::Logger::setTagColor("CYAN", clogger::Color::CLOG_CYAN);
+    clogger::Logger::setTagColor("WHITE", clogger::Color::CLOG_WHITE);
+    clogger::Logger::setTagColor("B_RED", clogger::Color::CLOG_BRIGHT_RED);
+    clogger::Logger::setTagColor("B_GREEN", clogger::Color::CLOG_BRIGHT_GREEN);
+    clogger::Logger::setTagColor("B_YELLOW", clogger::Color::CLOG_BRIGHT_YELLOW);
+    clogger::Logger::setTagColor("B_BLUE", clogger::Color::CLOG_BRIGHT_BLUE);
+    clogger::Logger::setTagColor("B_MAGENTA", clogger::Color::CLOG_BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("B_CYAN", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setTagColor("B_WHITE", clogger::Color::CLOG_BRIGHT_WHITE);
     
     CLOG_INFO("RED", "Regular red color");
     CLOG_INFO("GREEN", "Regular green color");
@@ -94,10 +94,10 @@ int main() {
     std::cout << "\n--- Dynamic Color Management ---" << std::endl;
     CLOG_INFO("TempTag", "This tag will change color...");
     
-    clogger::Logger::setTagColor("TempTag", clogger::Color::BRIGHT_RED);
+    clogger::Logger::setTagColor("TempTag", clogger::Color::CLOG_BRIGHT_RED);
     CLOG_INFO("TempTag", "Now I'm bright red!");
     
-    clogger::Logger::setTagColor("TempTag", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("TempTag", clogger::Color::CLOG_BRIGHT_GREEN);
     CLOG_INFO("TempTag", "Now I'm bright green!");
     
     clogger::Logger::clearTagColor("TempTag");
@@ -176,10 +176,10 @@ int main() {
     
     // Step 3: Demonstrate library colors
     std::cout << "\n3. Configure colors for library names:" << std::endl;
-    clogger::Logger::setLibraryColor("DesktopExample", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_GREEN);
-    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
-    clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
+    clogger::Logger::setLibraryColor("DesktopExample", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Database", clogger::Color::CLOG_BRIGHT_GREEN);
+    clogger::Logger::setTagColor("Network", clogger::Color::CLOG_BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("Security", clogger::Color::CLOG_BRIGHT_RED);
     
     CLOG_INFO("Database", "Colored library and tag names");
     CLOG_INFO("Network", "Library: cyan, Tag: magenta");
@@ -208,7 +208,7 @@ int main() {
     
     // Reset for next demo
     clogger::Logger::enableLibraryTags(true);
-    clogger::Logger::setLibraryColor("CLog", clogger::Color::BRIGHT_WHITE);
+    clogger::Logger::setLibraryColor("CLog", clogger::Color::CLOG_BRIGHT_WHITE);
     
     std::cout << "\n--- Testing Tag Filtering Feature ---" << std::endl;
     

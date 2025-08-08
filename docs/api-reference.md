@@ -129,8 +129,8 @@ clogger::Logger::enableDirectOutput(false);
 ```cpp
 // Platform enumeration
 enum class Platform {
-    ARDUINO, ESP32, ESP8266, RP2040_ARDUINO, RP2040_SDK,
-    ESP_IDF, DESKTOP, WINDOWS, LINUX, MACOS, AUTO_DETECT
+    CLOG_ARDUINO, CLOG_ESP32, CLOG_ESP8266, CLOG_RP2040_ARDUINO, CLOG_RP2040_SDK,
+    CLOG_ESP_IDF, CLOG_DESKTOP, CLOG_WINDOWS, CLOG_LINUX, CLOG_MACOS, CLOG_AUTO_DETECT
 };
 
 // Platform management
@@ -149,11 +149,11 @@ static bool hasPrintfSupport();
 **Example:**
 ```cpp
 // Explicit platform configuration
-clogger::Logger::init(clogger::Platform::RP2040_SDK);
+clogger::Logger::init(clogger::Platform::CLOG_RP2040_SDK);
 
 // Query platform capabilities
 if (clogger::Logger::hasColorSupport()) {
-    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::CLOG_BRIGHT_CYAN);
 }
 
 // Platform-specific logic
@@ -246,10 +246,10 @@ CLOG_TRACE("Database", "Trace");     // ✗ Not compiled (eliminated at compile 
 
 ```cpp
 enum class Color {
-    DEFAULT,        // No color (system default)
-    BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
-    BRIGHT_BLACK, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW,
-    BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, BRIGHT_WHITE
+    CLOG_DEFAULT,        // No color (system default)
+    CLOG_BLACK, CLOG_RED, CLOG_GREEN, CLOG_YELLOW, CLOG_BLUE, CLOG_MAGENTA, CLOG_CYAN, CLOG_WHITE,
+    CLOG_BRIGHT_BLACK, CLOG_BRIGHT_RED, CLOG_BRIGHT_GREEN, CLOG_BRIGHT_YELLOW,
+    CLOG_BRIGHT_BLUE, CLOG_BRIGHT_MAGENTA, CLOG_BRIGHT_CYAN, CLOG_BRIGHT_WHITE
 };
 ```
 
@@ -269,10 +269,10 @@ static void clearAllTagColors();
 
 int main() {
     // Configure colors for different system components
-    clogger::Logger::setTagColor("Database", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setTagColor("Network", clogger::Color::BRIGHT_MAGENTA);
-    clogger::Logger::setTagColor("Security", clogger::Color::BRIGHT_RED);
-    clogger::Logger::setTagColor("UI", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setTagColor("Database", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setTagColor("Network", clogger::Color::CLOG_BRIGHT_MAGENTA);
+    clogger::Logger::setTagColor("Security", clogger::Color::CLOG_BRIGHT_RED);
+    clogger::Logger::setTagColor("UI", clogger::Color::CLOG_BRIGHT_GREEN);
     
     // Now these tags will appear in their configured colors
     CLOG_INFO("Database", "Connection established");
@@ -383,7 +383,7 @@ int main() {
     clogger::Logger::enableLibraryTags(true);
     
     // Configure colors for better visual distinction
-    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::CLOG_BRIGHT_BLUE);
     clogger::Logger::setTagColor("Query", clogger::Color::BRIGHT_GREEN);
     
     // Now all DatabaseLib logs show: [DatabaseLib][Tag]: message

@@ -575,9 +575,9 @@ void test_library_color_functionality() {
     // but we can test that the methods don't crash and handle edge cases
     
     // Test setting library colors
-    clogger::Logger::setLibraryColor("TestLib", clogger::Color::BRIGHT_RED);
-    clogger::Logger::setLibraryColor("AnotherLib", clogger::Color::BRIGHT_GREEN);
-    clogger::Logger::setLibraryColor("ThirdLib", clogger::Color::BRIGHT_BLUE);
+    clogger::Logger::setLibraryColor("TestLib", clogger::Color::CLOG_BRIGHT_RED);
+    clogger::Logger::setLibraryColor("AnotherLib", clogger::Color::CLOG_BRIGHT_GREEN);
+    clogger::Logger::setLibraryColor("ThirdLib", clogger::Color::CLOG_BRIGHT_BLUE);
     
     // Test clearing specific library color
     clogger::Logger::clearLibraryColor("TestLib");
@@ -586,18 +586,18 @@ void test_library_color_functionality() {
     clogger::Logger::clearLibraryColor("NonExistentLib");
     
     // Test setting color for empty library name (should handle gracefully)
-    clogger::Logger::setLibraryColor("", clogger::Color::BRIGHT_CYAN);
-    clogger::Logger::setLibraryColor(nullptr, clogger::Color::BRIGHT_MAGENTA);
+    clogger::Logger::setLibraryColor("", clogger::Color::CLOG_BRIGHT_CYAN);
+    clogger::Logger::setLibraryColor(nullptr, clogger::Color::CLOG_BRIGHT_MAGENTA);
     
     // Test very long library name
     std::string longLibName(100, 'B');
-    clogger::Logger::setLibraryColor(longLibName.c_str(), clogger::Color::BRIGHT_YELLOW);
+    clogger::Logger::setLibraryColor(longLibName.c_str(), clogger::Color::CLOG_BRIGHT_YELLOW);
     
     // Test clearing all library colors
     clogger::Logger::clearAllLibraryColors();
     
     // Test that methods still work after clearing all
-    clogger::Logger::setLibraryColor("AfterClear", clogger::Color::BRIGHT_WHITE);
+    clogger::Logger::setLibraryColor("AfterClear", clogger::Color::CLOG_BRIGHT_WHITE);
     clogger::Logger::clearLibraryColor("AfterClear");
     
     TestFramework::assert_true(true, "Library color methods executed without crashing");

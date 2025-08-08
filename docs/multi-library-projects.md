@@ -248,8 +248,8 @@ target_link_libraries(my_app PRIVATE database_lib network_lib clog::clog)
 int main() {
     // Enable library identification  
     clogger::Logger::enableLibraryTags(true);
-    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::BRIGHT_BLUE);
-    clogger::Logger::setLibraryColor("NetworkLib", clogger::Color::BRIGHT_GREEN);
+    clogger::Logger::setLibraryColor("DatabaseLib", clogger::Color::CLOG_BRIGHT_BLUE);
+    clogger::Logger::setLibraryColor("NetworkLib", clogger::Color::CLOG_BRIGHT_GREEN);
     
     initDatabase();    // [DatabaseLib][Init]: Database library initialized
     initNetwork();     // [NetworkLib][Init]: Network library initialized
