@@ -43,4 +43,4 @@ target_link_libraries(my_app PRIVATE clog::clog)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details
